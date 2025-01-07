@@ -1,46 +1,17 @@
-# Getting Started with Create React App
+# 이세계 전당포: 전설의 마법석을 찾아서
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+도시에서 평범하게 전당포를 운영하던 한 청년은 어느 날 이상한 손님을 맞이하게 된다. 손님은 신비로운 물건을 담보로 내놓으며 거래를 제안했고, 청년은 호기심에 이끌려 거래를 받아들인다.
 
-## Available Scripts
+퇴근 후, 호기심에 그 물건을 감상하던 청년은 물건에서 뿜어져 나오는 강렬한 빛에 휩싸이며 의식을 잃는다. 깨어난 곳은 중세 시대처럼 보이는, 마법과 다양한 종족이 공존하는 이세계였다.
 
-In the project directory, you can run:
+청년이 전이된 장소는 깊은 숲 속이었고, 그는 곧 고블린의 습격을 받는다. 가까스로 도망치다 큰 상처를 입은 채 기절하고 만다.
 
-### `npm start`
+눈을 뜬 그는 낡은 오두막에서 붕대를 감은 채 침대에 누워 있었다. 그의 생명을 구한 이는 자신을 마법사라 소개하는 한 노인이었다. 노인은 청년이 이세계의 사람이 아님을 단번에 간파했고, 전설에 대해 이야기해 주었다.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+노인은 특정 7가지 마법석을 모으면 다른 세계로 연결되는 게이트를 열 수 있다고 설명했다. 하지만 그 마법석은 지난 300년 동안 아무도 찾지 못했으며, 이세계 어딘가에 숨겨져 있다고 했다.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+자신의 세계로 돌아가려는 결심을 한 청년은 마법석을 찾기 위해 여정을 떠나기로 한다. 그러나 이세계의 삶은 녹록치 않았다. 돈이 필요했던 청년은 자신이 가장 잘할 수 있는 일을 떠올린다. "전당포를 열자."
 
-### `npm test`
+청년은 이세계의 주민들을 상대로 물건을 감정하고 거래하며 돈을 모으기 시작한다. 동시에 그는 용병을 고용하고 던전을 탐험하며 전설의 마법석을 찾아 나선다. 과연 청년은 7가지 마법석을 모아 자신의 세계로 돌아갈 수 있을까?
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+이세계에서 펼쳐지는 청년의 전당포 운영과 위험천만한 모험 이야기가 시작된다.
