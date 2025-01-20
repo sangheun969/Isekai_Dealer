@@ -18,8 +18,9 @@ export default class Scenes extends Phaser.Scene {
     background.setDisplaySize(width, height);
 
     const menuText = this.add
-      .text(400, 100, "start", {
+      .text(400, 100, "시작", {
         fontSize: "32px",
+        padding: { top: 10, bottom: 10 },
         // fill: "#fff",
       })
       .setOrigin(0.5);
