@@ -113,10 +113,6 @@ export default class StoryScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
-    // if (this.currentCharacterImage) {
-    //   this.currentCharacterImage.destroy();
-    // }
-
     const characterImage = this.add.image(width / 2, height / 2, imageKey);
     characterImage.setAlpha(0).setDepth(1).setScale(0.7);
     characterImage.y += 20;

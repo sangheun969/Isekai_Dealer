@@ -12,9 +12,7 @@ export default class Scenes extends Phaser.Scene {
   create() {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
-
     const background = this.add.image(width / 2, height / 2, "background");
-
     background.setDisplaySize(width, height);
 
     const menuText = this.add
