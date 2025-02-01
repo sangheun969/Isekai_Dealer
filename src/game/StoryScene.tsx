@@ -6,68 +6,35 @@ export default class StoryScene extends Phaser.Scene {
   private storyTextIndex = 0;
   private storyData = storyData;
   private currentCharacterImage: Phaser.GameObjects.Image | null = null;
-
+  private dialogueTextBelow: Phaser.GameObjects.Text | null = null;
   constructor() {
     super({ key: "StoryScene" });
   }
 
   preload() {
-    this.load.image("pawnShopBackground", "/images/background/pawnShop1.png");
-    this.load.image("nextBtn1", "/images/background/nextBtn1.png");
-    this.load.image("frontmen1", "/images/npc/frontmen1.png");
-    this.load.image("gauntletItem", "/images/items/gauntleItem.png");
+    this.load.image("pawnShopBackground2", "/images/background/storeBg4.png");
+    this.load.image("frontmen3", "/images/npc/frontmen3.png");
+    // this.load.image("gauntletItem", "/images/items/gauntleItem.png");
+    this.load.image("speechBubble2", "/images/background/speechBubble2.png");
   }
 
   create() {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
-
     this.add
-      .image(width / 2, height / 2, "pawnShopBackground")
+      .image(width / 2, height / 2, "pawnShopBackground2")
       .setDisplaySize(width, height)
       .setDepth(0);
 
-    const dialogueBox = this.add.graphics();
-    const boxWidth = width * 0.8;
-    const boxHeight = 150;
-    const boxX = width / 2 - boxWidth / 2;
-    const boxY = height - 200;
-
-    dialogueBox
-      .fillStyle(0xffffff, 0.7) // 흰색(#ffffff)과 투명도 0.7
-      .fillRoundedRect(boxX, boxY, boxWidth, boxHeight, 10)
+    const speechBubble = this.add
+      .image(width / 4, height / 3.5, "speechBubble2")
+      .setScale(0.5)
       .setDepth(10);
 
-    this.displayStoryText(this.storyTextIndex);
-
-    const rightBtn = this.add
-      .image(boxX + boxWidth - 30, boxY + boxHeight / 2, "nextBtn1")
-      .setOrigin(0.5)
-      .setInteractive()
-      .setScale(0.1)
-      .setAlpha(0.7);
-
-    this.tweens.add({
-      targets: rightBtn,
-      y: { value: rightBtn.y - 10, ease: "Sine.easeInOut", yoyo: true },
-      duration: 500,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    });
-
-    rightBtn.on("pointerdown", () => {
-      this.advanceStory();
-    });
-
-    this.input?.keyboard?.on("keydown-SPACE", () => {
-      this.advanceStory();
-    });
+    this.displayStoryText(this.storyTextIndex, speechBubble);
   }
 
-  /**
-   * 현재 인덱스의 스토리 텍스트를 화면에 표시합니다.
-   */
-  displayStoryText(index: number) {
+  displayStoryText(index: number, speechBubble: Phaser.GameObjects.Image) {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
@@ -76,20 +43,66 @@ export default class StoryScene extends Phaser.Scene {
 
     const textColor = story.id === 1 ? "#000000" : "#064d06";
 
+    // 기존 텍스트 제거
     this.children.list
       .filter((child) => child.type === "Text")
       .forEach((textObj) => textObj.destroy());
 
-    const dialogueText = this.add.text(width / 2, height - 125, story.text, {
-      fontSize: "24px",
-      color: textColor,
-      wordWrap: { width: width * 0.8 },
-      align: "center",
-      padding: { top: 10, bottom: 10 },
-    });
+    if (story.id === 2) {
+      const dialogueText = this.add.text(
+        speechBubble.x,
+        speechBubble.y - speechBubble.displayHeight * 0.1,
+        story.text,
+        {
+          fontSize: "24px",
+          color: textColor,
+          wordWrap: { width: speechBubble.displayWidth * 0.8 },
+          align: "center",
+          padding: { top: 10, bottom: 10 },
+        }
+      );
+      dialogueText.setOrigin(0.5).setDepth(11);
+    }
 
-    dialogueText.setOrigin(0.5).setDepth(11);
+    // 'id:1'의 경우 말풍선 바로 아래에 대사 표시
+    if (story.id === 1) {
+      const dialogueBox = this.add.graphics();
+      const boxWidth = width * 0.25; // 박스 너비
+      const boxHeight = 120; // 박스 높이
+      const boxX = width / 5 - boxWidth / 4; // 박스 X 위치
+      const boxY = speechBubble.y + speechBubble.displayHeight * 0.5; // 박스 Y 위치
 
+      // 박스 배경 그리기
+      dialogueBox.fillStyle(0xffffff, 1); // 배경 색상 (흰색)
+      dialogueBox.fillRoundedRect(boxX, boxY, boxWidth, boxHeight, 20); // 둥근 모서리
+
+      // 박스에 텍스트 추가
+      this.dialogueTextBelow = this.add.text(
+        width / 4,
+        boxY + boxHeight / 2,
+        story.text,
+        {
+          fontSize: "18px",
+          color: textColor,
+          wordWrap: { width: boxWidth * 0.8 },
+          align: "center",
+          padding: { top: 10, bottom: 10 },
+        }
+      );
+      this.dialogueTextBelow.setOrigin(0.5).setDepth(12);
+      dialogueBox.setInteractive(
+        new Phaser.Geom.Rectangle(boxX, boxY, boxWidth, boxHeight),
+        Phaser.Geom.Rectangle.Contains
+      );
+      // 박스를 클릭 가능하도록 설정
+      dialogueBox.setInteractive();
+      dialogueBox.on("pointerdown", () => {
+        this.advanceStory();
+        this.displayStoryText(this.storyTextIndex, speechBubble);
+      });
+    }
+
+    // 캐릭터 이미지 표시
     if (story.image) {
       this.showCharacterImage(story.image);
     } else if (this.currentCharacterImage) {
@@ -103,19 +116,25 @@ export default class StoryScene extends Phaser.Scene {
    */
   advanceStory() {
     this.storyTextIndex = (this.storyTextIndex + 1) % this.storyData.length;
-    this.displayStoryText(this.storyTextIndex);
+    const speechBubble = this.children.list.find(
+      (child) =>
+        (child as Phaser.GameObjects.Image).texture?.key === "speechBubble2"
+    );
+    if (speechBubble) {
+      this.displayStoryText(
+        this.storyTextIndex,
+        speechBubble as Phaser.GameObjects.Image
+      );
+    }
   }
 
-  /**
-   * 캐릭터 이미지를 화면에 표시합니다.
-   */
   showCharacterImage(imageKey: string) {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
-    const characterImage = this.add.image(width / 2, height / 2, imageKey);
-    characterImage.setAlpha(0).setDepth(1).setScale(0.7);
-    characterImage.y += 20;
+    const characterImage = this.add.image(width / 2, height / 2.25, imageKey);
+    characterImage.setAlpha(0).setDepth(1).setScale(0.4);
+    characterImage.y += 10;
 
     this.tweens.add({
       targets: characterImage,
