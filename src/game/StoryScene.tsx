@@ -1,35 +1,46 @@
 import Phaser from "phaser";
 import storyData from "../components/templates/storyData";
+import storyData2 from "../components/templates/storyData2";
 
 export default class StoryScene extends Phaser.Scene {
-  private selectedCharacter: string | null = null;
   private storyTextIndex = 0;
   private storyData = storyData;
+  private storyData2 = storyData2;
   private currentCharacterImage: Phaser.GameObjects.Image | null = null;
   private dialogueTextBelow: Phaser.GameObjects.Text | null = null;
+  private dialogueBox: Phaser.GameObjects.Graphics | null = null;
+  private speechBubble: Phaser.GameObjects.Image | null = null;
+
   constructor() {
     super({ key: "StoryScene" });
   }
 
   preload() {
-    this.load.image("pawnShopBackground2", "/images/background/storeBg4.png");
+    this.load.image("pawnShopBackground2", "/images/background/storeBg6.png");
+    this.load.image("table1", "/images/background/table1.png");
     this.load.image("frontmen3", "/images/npc/frontmen3.png");
-    // this.load.image("gauntletItem", "/images/items/gauntleItem.png");
-    this.load.image("speechBubble2", "/images/background/speechBubble2.png");
+    this.load.image("speechBubble4", "/images/background/speechBubble4.png");
   }
 
   create() {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
+
     this.add
       .image(width / 2, height / 2, "pawnShopBackground2")
       .setDisplaySize(width, height)
       .setDepth(0);
 
+    const table = this.add
+      .image(width / 2, height, "table1")
+      .setDisplaySize(width, height)
+      .setDepth(2);
+
     const speechBubble = this.add
-      .image(width / 4, height / 3.5, "speechBubble2")
-      .setScale(0.5)
-      .setDepth(10);
+      .image(width / 4.5, height / 3.5, "speechBubble4")
+      .setScale(0.8)
+      .setDepth(10)
+      .setAlpha(0);
 
     this.displayStoryText(this.storyTextIndex, speechBubble);
   }
@@ -38,111 +49,145 @@ export default class StoryScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
-    const story = this.storyData[index];
-    if (!story) return;
+    if (index >= this.storyData.length) return;
 
-    const textColor = story.id === 1 ? "#000000" : "#064d06";
+    const currentStory = this.storyData[index];
+    const currentStory2 = this.storyData2[index];
+    this.children.each((child) => {
+      if (child instanceof Phaser.GameObjects.Text) {
+        child.destroy();
+      }
+    });
 
-    // 기존 텍스트 제거
-    this.children.list
-      .filter((child) => child.type === "Text")
-      .forEach((textObj) => textObj.destroy());
+    const dialogueTextTop = this.add.text(
+      speechBubble.x + 50,
+      speechBubble.y - speechBubble.displayHeight * 0.1,
+      currentStory.text,
+      {
+        fontSize: "28px",
+        color: "#064d06",
+        wordWrap: { width: speechBubble.displayWidth * 0.7 },
+        align: "center",
+        padding: { top: 10, bottom: 10 },
+      }
+    );
+    dialogueTextTop.setOrigin(0.5).setDepth(11);
 
-    if (story.id === 2) {
-      const dialogueText = this.add.text(
-        speechBubble.x,
-        speechBubble.y - speechBubble.displayHeight * 0.1,
-        story.text,
-        {
-          fontSize: "24px",
-          color: textColor,
-          wordWrap: { width: speechBubble.displayWidth * 0.8 },
-          align: "center",
-          padding: { top: 10, bottom: 10 },
-        }
-      );
-      dialogueText.setOrigin(0.5).setDepth(11);
+    if (currentStory.image) {
+      this.showCharacterImage(currentStory.image);
     }
 
-    // 'id:1'의 경우 말풍선 바로 아래에 대사 표시
-    if (story.id === 1) {
-      const dialogueBox = this.add.graphics();
-      const boxWidth = width * 0.25; // 박스 너비
-      const boxHeight = 120; // 박스 높이
-      const boxX = width / 5 - boxWidth / 4; // 박스 X 위치
-      const boxY = speechBubble.y + speechBubble.displayHeight * 0.5; // 박스 Y 위치
+    if (currentStory2) {
+      const boxWidth = width * 0.25;
+      const boxHeight = 120;
+      const boxX = width / 5 - boxWidth / 4;
+      const boxY = speechBubble.y + speechBubble.displayHeight * 0.5;
+      this.dialogueBox = this.add.graphics();
+      this.dialogueBox.fillStyle(0xffffff, 1);
+      this.dialogueBox.fillRoundedRect(boxX, boxY, boxWidth, boxHeight, 20);
 
-      // 박스 배경 그리기
-      dialogueBox.fillStyle(0xffffff, 1); // 배경 색상 (흰색)
-      dialogueBox.fillRoundedRect(boxX, boxY, boxWidth, boxHeight, 20); // 둥근 모서리
+      if (this.dialogueTextBelow) {
+        this.dialogueTextBelow.destroy();
+      }
 
-      // 박스에 텍스트 추가
       this.dialogueTextBelow = this.add.text(
-        width / 4,
+        boxX + boxWidth / 2,
         boxY + boxHeight / 2,
-        story.text,
+        currentStory2.text,
         {
           fontSize: "18px",
-          color: textColor,
+          color: "#000000",
           wordWrap: { width: boxWidth * 0.8 },
           align: "center",
-          padding: { top: 10, bottom: 10 },
+          padding: { top: 5, bottom: 5 },
         }
       );
       this.dialogueTextBelow.setOrigin(0.5).setDepth(12);
-      dialogueBox.setInteractive(
+
+      this.dialogueBox.setInteractive(
         new Phaser.Geom.Rectangle(boxX, boxY, boxWidth, boxHeight),
         Phaser.Geom.Rectangle.Contains
       );
-      // 박스를 클릭 가능하도록 설정
-      dialogueBox.setInteractive();
-      dialogueBox.on("pointerdown", () => {
-        this.advanceStory();
-        this.displayStoryText(this.storyTextIndex, speechBubble);
+
+      this.dialogueBox.on("pointerdown", () => {
+        this.advanceStory(speechBubble);
       });
     }
-
-    // 캐릭터 이미지 표시
-    if (story.image) {
-      this.showCharacterImage(story.image);
-    } else if (this.currentCharacterImage) {
-      this.currentCharacterImage.destroy();
-      this.currentCharacterImage = null;
-    }
   }
 
-  /**
-   * 다음 스토리 텍스트로 이동합니다.
-   */
-  advanceStory() {
-    this.storyTextIndex = (this.storyTextIndex + 1) % this.storyData.length;
-    const speechBubble = this.children.list.find(
-      (child) =>
-        (child as Phaser.GameObjects.Image).texture?.key === "speechBubble2"
-    );
-    if (speechBubble) {
-      this.displayStoryText(
-        this.storyTextIndex,
-        speechBubble as Phaser.GameObjects.Image
-      );
+  advanceStory(speechBubble: Phaser.GameObjects.Image) {
+    this.storyTextIndex++;
+
+    if (this.storyTextIndex >= this.storyData.length) {
+      this.storyTextIndex = 0;
     }
+
+    this.displayStoryText(this.storyTextIndex, speechBubble);
   }
 
-  showCharacterImage(imageKey: string) {
+  showCharacterImage(imageKey: string | null) {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
-    const characterImage = this.add.image(width / 2, height / 2.25, imageKey);
-    characterImage.setAlpha(0).setDepth(1).setScale(0.4);
-    characterImage.y += 10;
+    if (imageKey === null) {
+      if (this.currentCharacterImage) {
+        this.tweens.add({
+          targets: this.currentCharacterImage,
+          alpha: 0,
+          duration: 500,
+          ease: "Sine.easeInOut",
+        });
+      }
+      if (this.speechBubble) {
+        this.speechBubble.setAlpha(0);
+      }
+
+      return;
+    }
+    if (
+      this.currentCharacterImage &&
+      this.currentCharacterImage.texture.key === imageKey
+    ) {
+      this.tweens.add({
+        targets: this.currentCharacterImage,
+        alpha: 1,
+        duration: 500,
+        ease: "Sine.easeInOut",
+      });
+
+      // speechBubble 보이기
+      if (this.speechBubble) {
+        this.speechBubble.setAlpha(1);
+      }
+
+      return;
+    } else if (this.currentCharacterImage) {
+      this.currentCharacterImage.destroy();
+    }
+
+    this.currentCharacterImage = this.add.image(
+      width / 2,
+      height / 1.8,
+      imageKey
+    );
+    this.currentCharacterImage.setAlpha(0).setDepth(1).setScale(0.6);
+    this.currentCharacterImage.y += 10;
 
     this.tweens.add({
-      targets: characterImage,
+      targets: this.currentCharacterImage,
       alpha: 1,
       duration: 1000,
       ease: "Sine.easeInOut",
     });
+    if (!this.speechBubble) {
+      this.speechBubble = this.add
+        .image(width / 4, height / 3.5, "speechBubble4")
+        .setScale(0.8)
+        .setDepth(10)
+        .setAlpha(0);
+    }
 
-    this.currentCharacterImage = characterImage;
+    // speechBubble 보이기
+    this.speechBubble.setAlpha(1);
   }
 }
