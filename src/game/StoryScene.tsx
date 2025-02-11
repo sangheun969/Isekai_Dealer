@@ -14,7 +14,7 @@ export default class StoryScene extends Phaser.Scene {
   private characterNameText: Phaser.GameObjects.Text | null = null;
   private gauntletItemImage: Phaser.GameObjects.Image | null = null;
   private gameObject: Phaser.GameObjects.Image | null = null;
-  private background?: Phaser.GameObjects.Sprite;
+  private background: Phaser.GameObjects.Image | null = null;
 
   constructor() {
     super({ key: "StoryScene" });
@@ -22,7 +22,8 @@ export default class StoryScene extends Phaser.Scene {
 
   preload() {
     this.load.image("pawnShopBackground2", "/images/background/storeBg6.png");
-    this.load.image("pawnShopBackground3", "images/background/storeBg8.png");
+    this.load.image("pawnShopBackground3", "/images/background/storeBg5.png");
+    this.load.image("master", "/images/main/master3.png");
     this.load.image("table1", "/images/background/table1.png");
     this.load.image("frontmen3", "/images/npc/frontmen3.png");
     this.load.image("speechBubble", "/images/background/speechBubble5.png");
@@ -116,7 +117,10 @@ export default class StoryScene extends Phaser.Scene {
     // 캐릭터 이미지 표시
     if (currentStory.image) {
       this.showCharacterImage(currentStory.image);
-      if (currentStory.image === "frontmen3") {
+      if (
+        currentStory.image === "frontmen3" ||
+        currentStory.image === "master"
+      ) {
         this.speechBubble2?.setAlpha(1);
         if (currentStory.name) {
           if (this.characterNameText) {
@@ -220,7 +224,14 @@ export default class StoryScene extends Phaser.Scene {
   changeBackground(newBackgroundKey: string) {
     if (this.background) {
       this.background.setTexture(newBackgroundKey);
+      this.background.setDisplaySize(this.scale.width, this.scale.height);
+      return;
     }
+
+    this.background = this.add
+      .image(0, 0, newBackgroundKey)
+      .setOrigin(0, 0) // 좌상단 기준으로 설정
+      .setDisplaySize(this.scale.width, this.scale.height);
   }
 
   advanceStory(speechBubble: Phaser.GameObjects.Image) {

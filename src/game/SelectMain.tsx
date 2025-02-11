@@ -1,5 +1,4 @@
 import Phaser from "phaser";
-import StoryScene from "./StoryScene";
 
 export default class SelectMain extends Phaser.Scene {
   private selectedCharacter: string | null = null;
@@ -22,7 +21,6 @@ export default class SelectMain extends Phaser.Scene {
       { id: 2, name: "Asian Woman", image: "character2" },
     ];
 
-    // 캐릭터를 화면에 배치
     characters.forEach((char, index) => {
       const x = width / 2 + index * 500;
       const y = height / 2;

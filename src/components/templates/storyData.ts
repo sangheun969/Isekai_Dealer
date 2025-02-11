@@ -125,6 +125,30 @@ const storyData: StoryData[] = [
     item: null,
     effect: null,
   },
+  {
+    id: 16,
+    name: null,
+    text: "",
+    image: null,
+    item: null,
+    effect: null,
+  },
+  {
+    id: 17,
+    name: "소녀",
+    text: "오..드디어 일어 났군아",
+    image: "master",
+    item: null,
+    effect: null,
+  },
+  {
+    id: 18,
+    name: "소녀",
+    text: "너무 긴장하지 말게 ",
+    image: "master",
+    item: null,
+    effect: null,
+  },
 ];
 
 export default storyData;
