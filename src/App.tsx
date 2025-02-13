@@ -4,6 +4,7 @@ import Scenes from "./game/Scenes";
 import SavePage from "./game/SavePage";
 import SelectMain from "./game/SelectMain";
 import StoryScene from "./game/StoryScene";
+import GameScene from "./game/GameScene";
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -11,7 +12,7 @@ const App: React.FC = () => {
       type: Phaser.AUTO,
       width: window.innerWidth,
       height: window.innerHeight,
-      scene: [Scenes, SavePage, SelectMain, StoryScene],
+      scene: [Scenes, SavePage, SelectMain, StoryScene, GameScene],
       parent: "phaser-game-container",
     };
 

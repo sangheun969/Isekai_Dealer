@@ -95,7 +95,7 @@ export default class StoryScene extends Phaser.Scene {
       currentStory.text || "",
       {
         fontFamily: "GowunDodum",
-        fontSize: "28px",
+        fontSize: "25px",
         color: "#ffffff",
         wordWrap: { width: speechBubble.displayWidth * 0.7 },
         align: "center",
@@ -236,6 +236,11 @@ export default class StoryScene extends Phaser.Scene {
 
   advanceStory(speechBubble: Phaser.GameObjects.Image) {
     const currentStory = this.storyData[this.storyTextIndex];
+
+    if (this.storyTextIndex >= this.storyData.length - 1) {
+      this.scene.start("GameScene"); // 🚀 GameScene으로 이동
+      return;
+    }
     if (currentStory.effect === "흰화면") {
       this.addWhiteScreenEffect();
       this.changeBackground("pawnShopBackground3");
@@ -335,8 +340,8 @@ export default class StoryScene extends Phaser.Scene {
       height / 1.8,
       imageKey
     );
-    this.currentCharacterImage.setAlpha(0).setDepth(1).setScale(0.6);
-    this.currentCharacterImage.y += 10;
+    this.currentCharacterImage.setAlpha(0).setDepth(1).setScale(0.7);
+    this.currentCharacterImage.y += 5;
 
     this.tweens.add({
       targets: this.currentCharacterImage,
