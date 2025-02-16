@@ -1,11 +1,3 @@
-// const item: {
-//   id: number;
-//   name: string;
-//   text: string;
-//   image: string;
-//   rarity: string;
-// } | undefined
-
 const itemInfo = [
   {
     id: 1,

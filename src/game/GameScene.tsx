@@ -75,31 +75,43 @@ export default class GameScene extends Phaser.Scene {
 
     this.customer = this.add.image(width / 2, height, customerKey);
     this.customer.setScale(0.7).setDepth(4).setOrigin(0.5, 1);
+
     const randomItem = Phaser.Math.RND.pick(itemInfo);
 
     if (randomItem) {
-      const itemKey = `item${randomItem.id}`; // 아이템의 id 값을 활용
+      const itemKey = `item${randomItem.id}`;
       this.selectedItemKey = itemKey;
+      console.log("선택된 아이템:", randomItem);
+      console.log("이미지 키:", itemKey, "이미지 경로:", randomItem.image);
 
-      this.load.image(itemKey, randomItem.image);
+      if (!this.textures.exists(itemKey)) {
+        console.warn(`이미지가 로드되지 않아 추가 로드: ${randomItem.image}`);
+        this.load.image(itemKey, randomItem.image);
+      }
 
       this.load.once("complete", () => {
-        const item = this.add.image(width / 2, height / 1.2, itemKey);
-        item.setScale(0.7).setDepth(6).setOrigin(0.5, 0.5);
-        item.setInteractive();
+        if (this.textures.exists(itemKey)) {
+          console.log(`이미지 로드 성공: ${itemKey}`);
 
-        item.on("pointerover", () => {
-          item.setTint(0xdddddd);
-        });
+          const item = this.add.image(width / 2, height / 1.2, itemKey);
+          item.setScale(0.7).setDepth(6).setOrigin(0.5, 0.5);
+          item.setInteractive();
 
-        item.on("pointerout", () => {
-          item.clearTint();
-        });
+          item.on("pointerover", () => {
+            item.setTint(0xdddddd);
+          });
 
-        item.on("pointerdown", () => {
-          this.toggleItemStatus(itemKey);
-          this.currentItemKey = itemKey;
-        });
+          item.on("pointerout", () => {
+            item.clearTint();
+          });
+
+          item.on("pointerdown", () => {
+            this.toggleItemStatus(randomItem);
+            this.currentItemKey = itemKey;
+          });
+        } else {
+          console.error(`이미지를 찾을 수 없음: ${itemKey}`);
+        }
       });
 
       this.load.start();
@@ -223,27 +235,20 @@ export default class GameScene extends Phaser.Scene {
     this.choiceButtonGroup?.add(newText2);
   }
 
-  private toggleItemStatus(itemKey: string) {
+  public toggleItemStatus(item: {
+    id: number;
+    name: string;
+    text: string;
+    image: string;
+    rarity: string;
+  }) {
     if (this.currentItemStatus) {
       this.currentItemStatus.close();
       this.currentItemStatus = null;
     } else {
-      // 선택된 아이템 정보 가져오기
-      const item = itemInfo.find(
-        (i) => i.id === Number(itemKey.replace("item", ""))
-      );
-
-      if (!item) {
-        console.warn(`아이템 정보를 찾을 수 없습니다. (key: ${itemKey})`);
-        return;
-      }
-
-      console.log(`아이템 상태창 열림: ${item.name}, 희귀도: ${item.rarity}`);
-
-      // 아이템 상태창 생성 및 정보 전달
       this.currentItemStatus = new ItemStatus(
         this,
-        this.scale.width / 2,
+        this.scale.width - 250, // 🔹 화면 오른쪽에 배치
         this.scale.height / 2,
         item.id // ✅ 이제 ID만 넘기면 자동으로 itemInfo에서 정보를 가져옴!
       );
