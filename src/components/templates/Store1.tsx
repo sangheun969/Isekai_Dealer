@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import Phaser from "phaser";
-import MenuStart from "../organisms/MenuStart";
-
 const Store1: React.FC = () => {
   const gameContainer = useRef<HTMLDivElement>(null);
   const [showPhaser, setShowPhaser] = useState(true);
@@ -13,7 +11,6 @@ const Store1: React.FC = () => {
           메뉴
         </button>
       </div>
-      <MenuStart />
     </div>
   );
 };

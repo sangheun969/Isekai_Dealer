@@ -94,7 +94,7 @@ export default class GameScene extends Phaser.Scene {
           console.log(`이미지 로드 성공: ${itemKey}`);
 
           const item = this.add.image(width / 2, height / 1.2, itemKey);
-          item.setScale(0.7).setDepth(6).setOrigin(0.5, 0.5);
+          item.setScale(0.5).setDepth(6).setOrigin(0.5, 0.5);
           item.setInteractive();
 
           item.on("pointerover", () => {

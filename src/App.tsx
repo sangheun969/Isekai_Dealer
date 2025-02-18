@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import Phaser from "phaser";
+import BootScene from "./game/BootScene";
 import Scenes from "./game/Scenes";
 import SavePage from "./game/SavePage";
 import SelectMain from "./game/SelectMain";
@@ -12,11 +13,18 @@ const App: React.FC = () => {
       type: Phaser.AUTO,
       width: window.innerWidth,
       height: window.innerHeight,
-      scene: [Scenes, SavePage, SelectMain, StoryScene, GameScene],
+      scene: [BootScene, Scenes, SavePage, SelectMain, StoryScene, GameScene],
       parent: "phaser-game-container",
+      audio: {
+        disableWebAudio: false,
+      },
     };
 
-    new Phaser.Game(config);
+    const game = new Phaser.Game(config);
+
+    return () => {
+      game.destroy(true);
+    };
   }, []);
 
   return <div id="phaser-game-container" className="w-full h-screen"></div>;
