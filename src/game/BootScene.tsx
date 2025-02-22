@@ -16,6 +16,8 @@ export default class BootScene extends Phaser.Scene {
         volume: 0.5,
       });
       bgm.play();
+
+      this.registry.set("backgroundMusic", bgm);
     }
 
     this.scene.start("Scenes");

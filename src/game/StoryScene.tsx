@@ -29,6 +29,7 @@ export default class StoryScene extends Phaser.Scene {
     this.load.image("speechBubble", "/images/background/speechBubble5.png");
     this.load.image("speechBubble2", "/images/background/speechBubble6.png");
     this.load.image("gauntletItem", "images/items/gauntletItem1.png");
+    this.load.audio("buttonClick", "/audios/Button1.mp3");
   }
 
   create() {
@@ -143,7 +144,6 @@ export default class StoryScene extends Phaser.Scene {
             .setOrigin(0.5)
             .setDepth(12);
         } else if (this.characterNameText) {
-          // `name`이 null일 경우 텍스트 제거
           this.characterNameText.destroy();
           this.characterNameText = null;
         }
@@ -217,6 +217,23 @@ export default class StoryScene extends Phaser.Scene {
       });
 
       this.dialogueBox.on("pointerdown", () => {
+        let effectSound = this.registry.get("buttonClick") as
+          | Phaser.Sound.BaseSound
+          | undefined;
+        if (!effectSound) {
+          effectSound = this.sound.add("buttonClick", { volume: 0.5 });
+          this.registry.set("buttonClick", effectSound);
+        }
+        const effectVolume = this.registry.get("effectVolume") as
+          | number
+          | undefined;
+        if (
+          effectSound instanceof Phaser.Sound.WebAudioSound &&
+          effectVolume !== undefined
+        ) {
+          effectSound.setVolume(effectVolume);
+        }
+        effectSound.play();
         this.advanceStory(speechBubble);
       });
     }
@@ -230,7 +247,7 @@ export default class StoryScene extends Phaser.Scene {
 
     this.background = this.add
       .image(0, 0, newBackgroundKey)
-      .setOrigin(0, 0) // 좌상단 기준으로 설정
+      .setOrigin(0, 0)
       .setDisplaySize(this.scale.width, this.scale.height);
   }
 
@@ -238,7 +255,7 @@ export default class StoryScene extends Phaser.Scene {
     const currentStory = this.storyData[this.storyTextIndex];
 
     if (this.storyTextIndex >= this.storyData.length - 1) {
-      this.scene.start("GameScene"); // 🚀 GameScene으로 이동
+      this.scene.start("GameScene");
       return;
     }
     if (currentStory.effect === "흰화면") {

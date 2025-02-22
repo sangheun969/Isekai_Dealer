@@ -31,6 +31,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("speechBubble", "/images/background/speechBubble5.png");
     this.load.image("speechBubble2", "/images/background/speechBubble6.png");
     this.load.image("coin", "/images/background/myCoin.png");
+    this.load.audio("buttonClick", "/audios/Button1.mp3");
 
     for (let i = 1; i <= 10; i++) {
       this.load.image(`client${i}`, `/images/npc/client${i}.png`);
@@ -81,9 +82,6 @@ export default class GameScene extends Phaser.Scene {
     if (randomItem) {
       const itemKey = `item${randomItem.id}`;
       this.selectedItemKey = itemKey;
-      console.log("선택된 아이템:", randomItem);
-      console.log("이미지 키:", itemKey, "이미지 경로:", randomItem.image);
-
       if (!this.textures.exists(itemKey)) {
         console.warn(`이미지가 로드되지 않아 추가 로드: ${randomItem.image}`);
         this.load.image(itemKey, randomItem.image);
@@ -91,8 +89,6 @@ export default class GameScene extends Phaser.Scene {
 
       this.load.once("complete", () => {
         if (this.textures.exists(itemKey)) {
-          console.log(`이미지 로드 성공: ${itemKey}`);
-
           const item = this.add.image(width / 2, height / 1.2, itemKey);
           item.setScale(0.5).setDepth(6).setOrigin(0.5, 0.5);
           item.setInteractive();
@@ -106,6 +102,23 @@ export default class GameScene extends Phaser.Scene {
           });
 
           item.on("pointerdown", () => {
+            let effectSound = this.registry.get("buttonClick") as
+              | Phaser.Sound.BaseSound
+              | undefined;
+            if (!effectSound) {
+              effectSound = this.sound.add("buttonClick", { volume: 0.5 });
+              this.registry.set("buttonClick", effectSound);
+            }
+            const effectVolume = this.registry.get("effectVolume") as
+              | number
+              | undefined;
+            if (
+              effectSound instanceof Phaser.Sound.WebAudioSound &&
+              effectVolume !== undefined
+            ) {
+              effectSound.setVolume(effectVolume);
+            }
+            effectSound.play();
             this.toggleItemStatus(randomItem);
             this.currentItemKey = itemKey;
           });
@@ -322,7 +335,26 @@ export default class GameScene extends Phaser.Scene {
       );
     });
 
-    buttonGraphics.on("pointerdown", callback);
+    buttonGraphics.on("pointerdown", () => {
+      let effectSound = this.registry.get("buttonClick") as
+        | Phaser.Sound.BaseSound
+        | undefined;
+      if (!effectSound) {
+        effectSound = this.sound.add("buttonClick", { volume: 0.5 });
+        this.registry.set("buttonClick", effectSound);
+      }
+      const effectVolume = this.registry.get("effectVolume") as
+        | number
+        | undefined;
+      if (
+        effectSound instanceof Phaser.Sound.WebAudioSound &&
+        effectVolume !== undefined
+      ) {
+        effectSound.setVolume(effectVolume);
+      }
+      effectSound.play();
+      callback();
+    });
 
     return { buttonGraphics, buttonText };
   }

@@ -13,7 +13,7 @@ export default class Scenes extends Phaser.Scene {
 
   preload() {
     this.load.image("background", "/images/background/storeBg3.png");
-    // this.load.audio("backgroundMusic", "/audios/Isekai_1.mp3");
+    this.load.audio("buttonClick", "/audios/Button1.mp3");
   }
 
   create() {
@@ -22,29 +22,89 @@ export default class Scenes extends Phaser.Scene {
     const background = this.add.image(width / 2, height / 2, "background");
     background.setDisplaySize(width, height);
 
-    const menuText = this.add
+    // 🔥 효과음 추가 후 registry에 저장
+    const buttonClickSound = this.sound.add("buttonClick", { volume: 0.5 });
+    this.registry.set("buttonClick", buttonClickSound);
+
+    const startButton = this.add
       .text(width / 2, height / 2 - 50, "시작", {
         fontSize: "32px",
+        color: "#fff",
+        backgroundColor: "#333",
         padding: { top: 10, bottom: 10 },
       })
       .setOrigin(0.5)
       .setInteractive();
 
-    menuText.on("pointerdown", () => {
-      this.scene.start("SavePage");
-    });
-
     const settingsButton = this.add
       .text(width / 2, height / 2 + 70, "설정", {
         fontSize: "32px",
         color: "#fff",
+        backgroundColor: "#333",
         padding: { top: 10, bottom: 10 },
       })
       .setOrigin(0.5)
       .setInteractive()
       .setDepth(10);
 
+    startButton.on("pointerover", () => {
+      startButton.setStyle({ color: "#ffcc00" });
+    });
+
+    startButton.on("pointerout", () => {
+      startButton.setStyle({ color: "#fff" });
+    });
+
+    startButton.on("pointerdown", () => {
+      let effectSound = this.registry.get("buttonClick") as
+        | Phaser.Sound.BaseSound
+        | undefined;
+      if (!effectSound) {
+        effectSound = this.sound.add("buttonClick", { volume: 0.5 });
+        this.registry.set("buttonClick", effectSound);
+      }
+      const effectVolume = this.registry.get("effectVolume") as
+        | number
+        | undefined;
+      if (
+        effectSound instanceof Phaser.Sound.WebAudioSound &&
+        effectVolume !== undefined
+      ) {
+        effectSound.setVolume(effectVolume);
+      }
+      effectSound.play();
+
+      this.scene.start("SavePage");
+    });
+
+    settingsButton.on("pointerover", () => {
+      settingsButton.setStyle({ color: "#ffcc00" });
+    });
+
+    settingsButton.on("pointerout", () => {
+      settingsButton.setStyle({ color: "#fff" });
+    });
+
     settingsButton.on("pointerdown", () => {
+      let effectSound = this.registry.get("buttonClick") as
+        | Phaser.Sound.BaseSound
+        | undefined;
+
+      if (!effectSound) {
+        effectSound = this.sound.add("buttonClick", { volume: 0.5 });
+        this.registry.set("buttonClick", effectSound);
+      }
+      const effectVolume = this.registry.get("effectVolume") as
+        | number
+        | undefined;
+      if (
+        effectSound instanceof Phaser.Sound.WebAudioSound &&
+        effectVolume !== undefined
+      ) {
+        effectSound.setVolume(effectVolume);
+      }
+      effectSound.play();
+
       if (!this.settingsOpen) {
         this.showSettingsModal();
       }
