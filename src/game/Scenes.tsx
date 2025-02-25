@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import SetUpBar from "../components/templates/SetUpBar";
+import { loadGameProgress } from "../backend/gameDataService";
 
 export default class Scenes extends Phaser.Scene {
   private settingsOpen = false;
@@ -46,6 +47,26 @@ export default class Scenes extends Phaser.Scene {
       .setOrigin(0.5)
       .setInteractive()
       .setDepth(10);
+
+    const loadButton = this.add
+      .text(width / 2, height / 2 + 90, "불러오기", {
+        fontSize: "32px",
+        color: "#fff",
+        backgroundColor: "#333",
+        padding: { top: 10, bottom: 10 },
+      })
+      .setOrigin(0.5)
+      .setInteractive()
+      .setDepth(10)
+      .on("pointerdown", async () => {
+        const savedData = await loadGameProgress();
+        if (savedData) {
+          console.log("불러온 데이터:", savedData);
+          this.scene.start("CharacterSelect", { data: savedData });
+        } else {
+          console.log("저장된 데이터가 없습니다.");
+        }
+      });
 
     startButton.on("pointerover", () => {
       startButton.setStyle({ color: "#ffcc00" });

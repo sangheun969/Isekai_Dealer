@@ -1,6 +1,8 @@
 import Phaser from "phaser";
 import ItemStatus from "../components/templates/ItemStatus";
 import itemInfo from "../components/organisms/itemInfo";
+import SetUpBar from "../components/templates/SetUpBar";
+import ReactDOM from "react-dom";
 
 export default class GameScene extends Phaser.Scene {
   private background: Phaser.GameObjects.Image | null = null;
@@ -20,6 +22,7 @@ export default class GameScene extends Phaser.Scene {
   private choiceButtonText1: Phaser.GameObjects.Text | null = null;
   private choiceButtonGroup: Phaser.GameObjects.Group | null = null;
   private selectedItemKey: string | null = null;
+  private isSetupBarOpen: boolean = false;
 
   constructor() {
     super({ key: "GameScene" });
@@ -28,6 +31,7 @@ export default class GameScene extends Phaser.Scene {
   preload() {
     this.load.image("pawnShopBackground3", "/images/background/storeBg5.png");
     this.load.image("table2", "/images/background/table2.png");
+    this.load.image("list1", "/images/background/list1.png");
     this.load.image("speechBubble", "/images/background/speechBubble5.png");
     this.load.image("speechBubble2", "/images/background/speechBubble6.png");
     this.load.image("coin", "/images/background/myCoin.png");
@@ -42,12 +46,15 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
     this.choiceButtonGroup = this.add.group();
 
+    const list1 = this.add.image(width * 0.1, height * 0.85, "list1");
+    list1.setScale(0.3).setDepth(6).setOrigin(0.5, 0.5);
+
     this.background = this.add
       .sprite(0, 0, "pawnShopBackground3")
       .setDisplaySize(width, height)
       .setOrigin(0, 0);
     this.add
-      .image(width / 2, height, "table1")
+      .image(width / 2, height, "table2")
       .setDisplaySize(width, height)
       .setDepth(5)
       .setOrigin(0.5, 0.5);
@@ -66,6 +73,38 @@ export default class GameScene extends Phaser.Scene {
       })
       .setDepth(5);
     this.spawnRandomCustomer();
+
+    this.add
+      .text(width / 2, height / 2 - 150, "게임 시작!", {
+        fontSize: "32px",
+        color: "#fff",
+      })
+      .setOrigin(0.5);
+
+    this.input.keyboard?.on("keydown-ESC", () => {
+      if (!this.isSetupBarOpen) {
+        this.openSetupBar();
+      }
+    });
+  }
+
+  openSetupBar() {
+    this.isSetupBarOpen = true;
+
+    const modalContainer = document.createElement("div");
+    modalContainer.id = "setup-bar-modal";
+    document.body.appendChild(modalContainer);
+
+    const closeSetupBar = () => {
+      this.isSetupBarOpen = false;
+      ReactDOM.unmountComponentAtNode(modalContainer);
+      document.body.removeChild(modalContainer);
+    };
+
+    ReactDOM.render(
+      <SetUpBar onClose={closeSetupBar} scene={this} />,
+      modalContainer
+    );
   }
 
   private spawnRandomCustomer() {
@@ -90,7 +129,7 @@ export default class GameScene extends Phaser.Scene {
       this.load.once("complete", () => {
         if (this.textures.exists(itemKey)) {
           const item = this.add.image(width / 2, height / 1.2, itemKey);
-          item.setScale(0.5).setDepth(6).setOrigin(0.5, 0.5);
+          item.setScale(0.6).setDepth(6).setOrigin(0.5, 0.5);
           item.setInteractive();
 
           item.on("pointerover", () => {
@@ -196,8 +235,6 @@ export default class GameScene extends Phaser.Scene {
             break;
         }
 
-        console.log("currentItemKey:", this.currentItemKey);
-
         const minPrice = Math.floor(this.money * minPercentage);
         const maxPrice = Math.floor(this.money * maxPercentage);
         const suggestedPrice =
@@ -263,7 +300,7 @@ export default class GameScene extends Phaser.Scene {
         this,
         this.scale.width - 250, // 🔹 화면 오른쪽에 배치
         this.scale.height / 2,
-        item.id // ✅ 이제 ID만 넘기면 자동으로 itemInfo에서 정보를 가져옴!
+        item.id
       );
     }
   }
