@@ -1,6 +1,6 @@
 import Phaser from "phaser";
-import storyData from "../components/templates/storyData.ts";
-import storyData2 from "../components/templates/storyData2.ts";
+import storyData from "../components/templates/storyData";
+import storyData2 from "../components/templates/storyData2";
 
 export default class StoryScene extends Phaser.Scene {
   private storyTextIndex = 0;

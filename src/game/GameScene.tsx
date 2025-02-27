@@ -1,9 +1,10 @@
 import Phaser from "phaser";
-import ItemStatus from "../components/templates/ItemStatus.tsx";
-import itemInfo from "../components/organisms/itemInfo.ts";
-import SetUpBar from "../components/templates/SetUpBar.tsx";
+import ItemStatus from "../components/templates/ItemStatus";
+import itemInfo from "../components/organisms/itemInfo";
+import SetUpBar from "../components/templates/SetUpBar";
+import React from "react";
 import ReactDOM from "react-dom";
-import { saveGameProgress } from "../utils/apiService.ts";
+import { saveGameProgress } from "../utils/apiService";
 
 export default class GameScene extends Phaser.Scene {
   private background: Phaser.GameObjects.Image | null = null;
@@ -15,8 +16,8 @@ export default class GameScene extends Phaser.Scene {
   private money: number = 100000;
   private customer: Phaser.GameObjects.Image | null = null;
   private speechText: Phaser.GameObjects.Text | null = null;
-  private choiceText1: Phaser.GameObjects.Text | null = null;
-  private choiceText2: Phaser.GameObjects.Text | null = null;
+  // private choiceText1: Phaser.GameObjects.Text | null = null;
+  // private choiceText2: Phaser.GameObjects.Text | null = null;
   private currentItemStatus: ItemStatus | null = null;
   private currentItemKey: string | null = null;
   private choiceButton1: Phaser.GameObjects.Graphics | null = null;

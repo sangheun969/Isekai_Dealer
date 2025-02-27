@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import itemInfo from "../organisms/itemInfo.ts";
+import itemInfo from "../organisms/itemInfo";
 
 class ItemStatus extends Phaser.GameObjects.Container {
   private background?: Phaser.GameObjects.Graphics;

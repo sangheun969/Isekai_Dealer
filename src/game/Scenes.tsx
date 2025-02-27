@@ -1,8 +1,8 @@
 import Phaser from "phaser";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import SetUpBar from "../components/templates/SetUpBar.tsx";
-import { loadGameProgress, saveGameProgress } from "../utils/apiService.ts";
+import SetUpBar from "../components/templates/SetUpBar";
+import { loadGameProgress, saveGameProgress } from "../utils/apiService";
 
 export default class Scenes extends Phaser.Scene {
   private settingsOpen = false;

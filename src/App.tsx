@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import Phaser from "phaser";
-import BootScene from "./game/BootScene.tsx";
-import Scenes from "./game/Scenes.tsx";
-import SelectMain from "./game/SelectMain.tsx";
-import StoryScene from "./game/StoryScene.tsx";
-import GameScene from "./game/GameScene.tsx";
+import BootScene from "./game/BootScene";
+import Scenes from "./game/Scenes";
+import SelectMain from "./game/SelectMain";
+import StoryScene from "./game/StoryScene";
+import GameScene from "./game/GameScene";
 
 const App: React.FC = () => {
   useEffect(() => {

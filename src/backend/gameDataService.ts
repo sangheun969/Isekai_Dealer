@@ -41,7 +41,6 @@ interface GameProgress {
   items: string;
 }
 
-// ✅ 게임 데이터 저장 함수
 export const saveGameProgress = async (money: number, items: any[]) => {
   const db = connectDB();
   return new Promise<void>((resolve, reject) => {
