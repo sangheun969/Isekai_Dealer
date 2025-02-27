@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { saveGameProgress, loadGameProgress } from "./gameDataService.js";
+import { saveGameProgress, loadGameProgress } from "./gameDataService.ts";
 
 const app = express();
 const PORT = 3001;

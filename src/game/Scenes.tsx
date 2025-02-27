@@ -1,8 +1,8 @@
 import Phaser from "phaser";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import SetUpBar from "../components/templates/SetUpBar";
-import { loadGameProgress } from "../backend/gameDataService";
+import SetUpBar from "../components/templates/SetUpBar.tsx";
+import { loadGameProgress, saveGameProgress } from "../utils/apiService.ts";
 
 export default class Scenes extends Phaser.Scene {
   private settingsOpen = false;
@@ -23,19 +23,30 @@ export default class Scenes extends Phaser.Scene {
     const background = this.add.image(width / 2, height / 2, "background");
     background.setDisplaySize(width, height);
 
-    // 🔥 효과음 추가 후 registry에 저장
     const buttonClickSound = this.sound.add("buttonClick", { volume: 0.5 });
     this.registry.set("buttonClick", buttonClickSound);
 
     const startButton = this.add
-      .text(width / 2, height / 2 - 50, "시작", {
+      .text(width / 2, height / 2 - 50, "새 게임", {
         fontSize: "32px",
         color: "#fff",
         backgroundColor: "#333",
         padding: { top: 10, bottom: 10 },
       })
       .setOrigin(0.5)
-      .setInteractive();
+      .setInteractive()
+      .on("pointerdown", async () => {
+        console.log("🆕 새 게임 시작!");
+
+        const newGameData = {
+          money: 100000,
+          items: [],
+        };
+
+        await saveGameProgress(newGameData.money, newGameData.items);
+
+        this.scene.start("StoryScene", { savedData: newGameData });
+      });
 
     const settingsButton = this.add
       .text(width / 2, height / 2 + 70, "설정", {
@@ -49,7 +60,7 @@ export default class Scenes extends Phaser.Scene {
       .setDepth(10);
 
     const loadButton = this.add
-      .text(width / 2, height / 2 + 90, "불러오기", {
+      .text(width / 2, height / 2 + 110, "이어서 시작", {
         fontSize: "32px",
         color: "#fff",
         backgroundColor: "#333",
@@ -67,6 +78,17 @@ export default class Scenes extends Phaser.Scene {
           console.log("저장된 데이터가 없습니다.");
         }
       });
+    loadButton.on("pointerdown", async () => {
+      console.log("📥 게임 데이터를 불러오는 중...");
+      const data = await loadGameProgress();
+
+      if (data) {
+        console.log("✅ 불러오기 완료!", data);
+        this.scene.start("GameScene", { savedData: data });
+      } else {
+        console.warn("⚠️ 저장된 데이터가 없습니다!");
+      }
+    });
 
     startButton.on("pointerover", () => {
       startButton.setStyle({ color: "#ffcc00" });

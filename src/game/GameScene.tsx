@@ -1,8 +1,9 @@
 import Phaser from "phaser";
-import ItemStatus from "../components/templates/ItemStatus";
-import itemInfo from "../components/organisms/itemInfo";
-import SetUpBar from "../components/templates/SetUpBar";
+import ItemStatus from "../components/templates/ItemStatus.tsx";
+import itemInfo from "../components/organisms/itemInfo.ts";
+import SetUpBar from "../components/templates/SetUpBar.tsx";
 import ReactDOM from "react-dom";
+import { saveGameProgress } from "../utils/apiService.ts";
 
 export default class GameScene extends Phaser.Scene {
   private background: Phaser.GameObjects.Image | null = null;
@@ -23,9 +24,19 @@ export default class GameScene extends Phaser.Scene {
   private choiceButtonGroup: Phaser.GameObjects.Group | null = null;
   private selectedItemKey: string | null = null;
   private isSetupBarOpen: boolean = false;
+  // private money: number = 100000;
+  private inventory: any[] = [];
 
   constructor() {
     super({ key: "GameScene" });
+  }
+
+  init(data: { savedData?: { money: number; items: any[] } }) {
+    if (data.savedData) {
+      console.log("📥 불러온 데이터 적용:", data.savedData);
+      this.money = data.savedData.money;
+      this.inventory = data.savedData.items;
+    }
   }
 
   preload() {
@@ -59,10 +70,10 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(5)
       .setOrigin(0.5, 0.5);
 
-    this.coinIcon = this.add
-      .image(width - 180, 50, "coin")
-      .setScale(0.2)
-      .setDepth(5);
+    // this.coinIcon = this.add
+    //   .image(width - 180, 50, "coin")
+    //   .setScale(0.2)
+    //   .setDepth(5);
 
     this.moneyText = this.add
       .text(width - 120, 40, `${this.money.toLocaleString()}`, {
@@ -75,17 +86,18 @@ export default class GameScene extends Phaser.Scene {
     this.spawnRandomCustomer();
 
     this.add
-      .text(width / 2, height / 2 - 150, "게임 시작!", {
-        fontSize: "32px",
+      .text(50, 50, `💰 ${this.money.toLocaleString()} 코인`, {
+        fontSize: "24px",
         color: "#fff",
       })
-      .setOrigin(0.5);
+      .setDepth(10);
 
-    this.input.keyboard?.on("keydown-ESC", () => {
-      if (!this.isSetupBarOpen) {
-        this.openSetupBar();
-      }
-    });
+    this.add
+      .text(50, 100, "💾 저장", { fontSize: "24px", color: "#fff" })
+      .setInteractive()
+      .on("pointerdown", async () => {
+        await saveGameProgress(this.money, this.inventory);
+      });
   }
 
   openSetupBar() {

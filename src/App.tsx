@@ -1,11 +1,10 @@
 import React, { useEffect } from "react";
 import Phaser from "phaser";
-import BootScene from "./game/BootScene";
-import Scenes from "./game/Scenes";
-import SavePage from "./game/SavePage";
-import SelectMain from "./game/SelectMain";
-import StoryScene from "./game/StoryScene";
-import GameScene from "./game/GameScene";
+import BootScene from "./game/BootScene.tsx";
+import Scenes from "./game/Scenes.tsx";
+import SelectMain from "./game/SelectMain.tsx";
+import StoryScene from "./game/StoryScene.tsx";
+import GameScene from "./game/GameScene.tsx";
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -13,7 +12,7 @@ const App: React.FC = () => {
       type: Phaser.AUTO,
       width: window.innerWidth,
       height: window.innerHeight,
-      scene: [BootScene, Scenes, SavePage, SelectMain, StoryScene, GameScene],
+      scene: [BootScene, Scenes, SelectMain, StoryScene, GameScene],
       parent: "phaser-game-container",
       audio: {
         disableWebAudio: false,

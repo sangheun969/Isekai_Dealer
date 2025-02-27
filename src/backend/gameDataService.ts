@@ -7,53 +7,88 @@ const __dirname = path.dirname(__filename);
 
 const dbPath = path.join(__dirname, "gameData.db");
 const sqlite = sqlite3.verbose();
-const db = new sqlite.Database(
-  dbPath,
-  sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
-  (err) => {
-    if (err) {
-      console.error("❌ 데이터베이스 연결 실패:", err.message);
-    } else {
-      console.log("✅ 데이터베이스 연결 성공:", dbPath);
-    }
-  }
-);
 
-export const saveGameProgress = (money: number, items: any[]) => {
-  const itemsJSON = JSON.stringify(items);
-  db.run("DELETE FROM game_progress");
-  db.run(
-    "INSERT INTO game_progress (money, items) VALUES (?, ?)",
-    [money, itemsJSON],
+const connectDB = () => {
+  return new sqlite.Database(
+    dbPath,
+    sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
     (err) => {
       if (err) {
-        console.error("❌ 저장 실패:", err.message);
-      } else {
-        console.log("✅ 게임 진행 데이터 저장 완료!");
+        console.error("❌ 데이터베이스 연결 실패:", err.message);
       }
     }
   );
 };
 
-export const loadGameProgress = async (): Promise<{
+const setupDatabase = () => {
+  const db = connectDB();
+  db.serialize(() => {
+    db.run(`
+      CREATE TABLE IF NOT EXISTS game_progress (
+        id INTEGER PRIMARY KEY UNIQUE,
+        money INTEGER NOT NULL,
+        items TEXT NOT NULL
+      )
+    `);
+  });
+  db.close();
+};
+
+setupDatabase();
+
+interface GameProgress {
   money: number;
-  items: any[];
-} | null> => {
-  return new Promise((resolve, reject) => {
-    db.get(
-      "SELECT * FROM game_progress ORDER BY id DESC LIMIT 1",
-      (err, row: { money: number; items: string } | undefined) => {
+  items: string;
+}
+
+// ✅ 게임 데이터 저장 함수
+export const saveGameProgress = async (money: number, items: any[]) => {
+  const db = connectDB();
+  return new Promise<void>((resolve, reject) => {
+    const itemsJSON = JSON.stringify(items);
+
+    db.run(
+      `INSERT INTO game_progress (id, money, items) 
+       VALUES (1, ?, ?) 
+       ON CONFLICT(id) DO UPDATE SET money = excluded.money, items = excluded.items`,
+      [money, itemsJSON],
+      (err) => {
         if (err) {
-          console.error("❌ 불러오기 실패:", err.message);
+          console.error("❌ 저장 실패:", err.message);
           reject(err);
         } else {
-          if (row) {
-            resolve({ money: row.money, items: JSON.parse(row.items) });
-          } else {
-            resolve(null);
-          }
+          console.log("✅ 게임 진행 데이터 저장 완료!");
+          resolve();
         }
       }
     );
+
+    db.close();
+  });
+};
+
+export const loadGameProgress = async (): Promise<GameProgress | null> => {
+  const db = connectDB();
+  return new Promise((resolve, reject) => {
+    db.get("SELECT * FROM game_progress WHERE id = 1", (err, row) => {
+      db.close();
+      if (err) {
+        console.error("❌ 불러오기 실패:", err.message);
+        reject(err);
+        return;
+      }
+      if (!row) {
+        console.warn("⚠️ 저장된 게임 데이터가 없습니다.");
+        resolve(null);
+        return;
+      }
+      const result = row as GameProgress;
+      try {
+        resolve({ money: result.money, items: JSON.parse(result.items) });
+      } catch (parseError) {
+        console.error("❌ 데이터 파싱 실패:", parseError);
+        reject(parseError);
+      }
+    });
   });
 };

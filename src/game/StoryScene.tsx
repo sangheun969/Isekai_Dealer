@@ -1,6 +1,6 @@
 import Phaser from "phaser";
-import storyData from "../components/templates/storyData";
-import storyData2 from "../components/templates/storyData2";
+import storyData from "../components/templates/storyData.ts";
+import storyData2 from "../components/templates/storyData2.ts";
 
 export default class StoryScene extends Phaser.Scene {
   private storyTextIndex = 0;
@@ -21,7 +21,7 @@ export default class StoryScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("pawnShopBackground2", "/images/background/storeBg6.png");
+    this.load.image("pawnShopBackground2", "/images/background/storeBg1.png");
     this.load.image("pawnShopBackground3", "/images/background/storeBg5.png");
     this.load.image("master", "/images/main/master3.png");
     this.load.image("table1", "/images/background/table1.png");
@@ -115,7 +115,6 @@ export default class StoryScene extends Phaser.Scene {
       }
     }
 
-    // 캐릭터 이미지 표시
     if (currentStory.image) {
       this.showCharacterImage(currentStory.image);
       if (
