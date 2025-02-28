@@ -9,11 +9,11 @@ import { saveGameProgress } from "../utils/apiService";
 export default class GameScene extends Phaser.Scene {
   private background: Phaser.GameObjects.Image | null = null;
   private dialogueBox: Phaser.GameObjects.Graphics | null = null;
+  private currentItem: Phaser.GameObjects.Image | null = null;
   private speechBubble: Phaser.GameObjects.Image | null = null;
   private speechBubble2: Phaser.GameObjects.Image | null = null;
-  private coinIcon: Phaser.GameObjects.Image | null = null;
-  private moneyText: Phaser.GameObjects.Text | null = null;
   private money: number = 100000;
+  private moneyText: Phaser.GameObjects.Text | null = null;
   private customer: Phaser.GameObjects.Image | null = null;
   private speechText: Phaser.GameObjects.Text | null = null;
   // private choiceText1: Phaser.GameObjects.Text | null = null;
@@ -25,7 +25,8 @@ export default class GameScene extends Phaser.Scene {
   private choiceButtonGroup: Phaser.GameObjects.Group | null = null;
   private selectedItemKey: string | null = null;
   private isSetupBarOpen: boolean = false;
-  // private money: number = 100000;
+  private suggestedPrice: number = 0;
+
   private inventory: any[] = [];
 
   constructor() {
@@ -44,12 +45,13 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("pawnShopBackground3", "/images/background/storeBg5.png");
     this.load.image("table2", "/images/background/table2.png");
     this.load.image("list1", "/images/background/list1.png");
+    this.load.image("listItems", "/images/background/listItems.png");
     this.load.image("speechBubble", "/images/background/speechBubble5.png");
     this.load.image("speechBubble2", "/images/background/speechBubble6.png");
     this.load.image("coin", "/images/background/myCoin.png");
     this.load.audio("buttonClick", "/audios/Button1.mp3");
 
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 8; i++) {
       this.load.image(`client${i}`, `/images/npc/client${i}.png`);
     }
   }
@@ -57,9 +59,6 @@ export default class GameScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
     this.choiceButtonGroup = this.add.group();
-
-    const list1 = this.add.image(width * 0.1, height * 0.85, "list1");
-    list1.setScale(0.3).setDepth(6).setOrigin(0.5, 0.5);
 
     this.background = this.add
       .sprite(0, 0, "pawnShopBackground3")
@@ -71,37 +70,44 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(5)
       .setOrigin(0.5, 0.5);
 
-    // this.coinIcon = this.add
-    //   .image(width - 180, 50, "coin")
-    //   .setScale(0.2)
-    //   .setDepth(5);
-
-    this.moneyText = this.add
-      .text(width - 120, 40, `${this.money.toLocaleString()}`, {
-        fontFamily: "Arial",
-        fontSize: "28px",
-        color: "#ffffff",
-        fontStyle: "bold",
-      })
-      .setDepth(5);
     this.spawnRandomCustomer();
 
-    this.add
-      .text(50, 50, `💰 ${this.money.toLocaleString()} 코인`, {
+    this.moneyText = this.add
+      .text(-50, 20, `💰 ${this.money.toLocaleString()} 코인`, {
         fontSize: "24px",
         color: "#fff",
       })
-      .setDepth(10);
+      .setDepth(10)
+      .setOrigin(1, 0);
 
     this.add
-      .text(50, 100, "💾 저장", { fontSize: "24px", color: "#fff" })
+      .text(-50, 60, "💾 저장", {
+        fontSize: "24px",
+        color: "#fff",
+        padding: { left: 10, right: 10, top: 5, bottom: 5 },
+      })
       .setInteractive()
+      .setDepth(10)
+      .setOrigin(1, 0)
       .on("pointerdown", async () => {
         await saveGameProgress(this.money, this.inventory);
       });
+
+    const list1 = this.add.image(width * 0.1, height * 0.85, "list1");
+    list1.setScale(0.4).setDepth(6).setOrigin(0.5, 0.5);
+    list1.setInteractive();
+
+    const listItemsImage = this.add.image(width / 2, height / 2, "listItems");
+    listItemsImage.setVisible(false).setDepth(10);
+
+    list1.on("pointerdown", () => {
+      listItemsImage.setVisible(!listItemsImage.visible);
+    });
+    this.input.keyboard?.on("keydown-ESC", this.openSetupBar, this);
   }
 
   openSetupBar() {
+    if (this.isSetupBarOpen) return;
     this.isSetupBarOpen = true;
 
     const modalContainer = document.createElement("div");
@@ -126,14 +132,15 @@ export default class GameScene extends Phaser.Scene {
     const randomClientNumber = Phaser.Math.Between(1, 9);
     const customerKey = `client${randomClientNumber}`;
 
-    this.customer = this.add.image(width / 2, height, customerKey);
-    this.customer.setScale(0.7).setDepth(4).setOrigin(0.5, 1);
+    this.customer = this.add.image(width / 2, height + 220, customerKey);
+    this.customer.setScale(0.6).setDepth(4).setOrigin(0.5, 1);
 
     const randomItem = Phaser.Math.RND.pick(itemInfo);
 
     if (randomItem) {
       const itemKey = `item${randomItem.id}`;
       this.selectedItemKey = itemKey;
+
       if (!this.textures.exists(itemKey)) {
         console.warn(`이미지가 로드되지 않아 추가 로드: ${randomItem.image}`);
         this.load.image(itemKey, randomItem.image);
@@ -141,19 +148,23 @@ export default class GameScene extends Phaser.Scene {
 
       this.load.once("complete", () => {
         if (this.textures.exists(itemKey)) {
-          const item = this.add.image(width / 2, height / 1.2, itemKey);
-          item.setScale(0.6).setDepth(6).setOrigin(0.5, 0.5);
-          item.setInteractive();
+          if (this.currentItem) {
+            this.currentItem.destroy();
+          }
 
-          item.on("pointerover", () => {
-            item.setTint(0xdddddd);
+          this.currentItem = this.add.image(width / 2, height / 1.2, itemKey);
+          this.currentItem.setScale(0.6).setDepth(6).setOrigin(0.5, 0.5);
+          this.currentItem.setInteractive();
+
+          this.currentItem.on("pointerover", () => {
+            this.currentItem?.setTint(0xdddddd);
           });
 
-          item.on("pointerout", () => {
-            item.clearTint();
+          this.currentItem.on("pointerout", () => {
+            this.currentItem?.clearTint();
           });
 
-          item.on("pointerdown", () => {
+          this.currentItem.on("pointerdown", () => {
             let effectSound = this.registry.get("buttonClick") as
               | Phaser.Sound.BaseSound
               | undefined;
@@ -250,11 +261,11 @@ export default class GameScene extends Phaser.Scene {
 
         const minPrice = Math.floor(this.money * minPercentage);
         const maxPrice = Math.floor(this.money * maxPercentage);
-        const suggestedPrice =
+        this.suggestedPrice =
           Math.floor(Phaser.Math.Between(minPrice, maxPrice) / 100) * 100;
         if (this.speechText) {
           this.speechText.setText(
-            `${suggestedPrice.toLocaleString()}코인에 팔고 싶습니다`
+            `${this.suggestedPrice.toLocaleString()}코인에 팔고 싶습니다`
           );
         }
         this.choiceButtonGroup?.clear(true, true);
@@ -276,12 +287,61 @@ export default class GameScene extends Phaser.Scene {
 
   private updateSpeechAndButtons() {
     const { width, height } = this.scale;
-    this.choiceButtonGroup?.clear(true, true);
+    if (this.choiceButtonGroup) {
+      this.choiceButtonGroup.children.each((child) => {
+        (child as Phaser.GameObjects.GameObject).destroy();
+        return true;
+      });
+    }
+
+    this.choiceButtonGroup = this.add.group();
+
+    this.choiceButton1?.destroy();
+    this.choiceButton1 = null;
+
+    this.choiceButtonText1?.destroy();
+    this.choiceButtonText1 = null;
+
     const { buttonGraphics: newButton1, buttonText: newText1 } =
       this.createButton(width / 4, height / 1.8, "좋습니다.", () => {
-        console.log(`좋습니다 선택`);
-      });
+        if (this.money >= this.suggestedPrice) {
+          this.money -= this.suggestedPrice;
+          console.log(`돈 ${this.money.toLocaleString()} 코인`);
 
+          if (this.moneyText) {
+            this.moneyText.setText(`💰 ${this.money.toLocaleString()} 코인`);
+          }
+
+          if (this.currentItem) {
+            console.log("아이템 삭제됨");
+            this.currentItem.destroy();
+            this.currentItem = null;
+          }
+          this.selectedItemKey = null;
+
+          this.customer?.destroy();
+          this.customer = null;
+
+          this.speechBubble?.destroy();
+          this.speechBubble = null;
+
+          this.speechBubble2?.destroy();
+          this.speechBubble2 = null;
+
+          this.speechText?.destroy();
+          this.speechText = null;
+
+          this.choiceButtonGroup?.clear(true, true);
+          this.choiceButtonGroup?.destroy(true);
+          this.choiceButtonGroup = this.add.group();
+          this.spawnRandomCustomer();
+        } else {
+          console.warn("잔액 부족! 거래할 수 없습니다.");
+          if (this.speechText) {
+            this.speechText.setText("잔액이 부족합니다. 거래할 수 없습니다.");
+          }
+        }
+      });
     const { buttonGraphics: newButton2, buttonText: newText2 } =
       this.createButton(
         width / 4,
@@ -292,10 +352,10 @@ export default class GameScene extends Phaser.Scene {
         }
       );
 
-    this.choiceButtonGroup?.add(newButton1);
-    this.choiceButtonGroup?.add(newText1);
-    this.choiceButtonGroup?.add(newButton2);
-    this.choiceButtonGroup?.add(newText2);
+    this.choiceButtonGroup.add(newButton1);
+    this.choiceButtonGroup.add(newText1);
+    this.choiceButtonGroup.add(newButton2);
+    this.choiceButtonGroup.add(newText2);
   }
 
   public toggleItemStatus(item: {
@@ -408,8 +468,4 @@ export default class GameScene extends Phaser.Scene {
 
     return { buttonGraphics, buttonText };
   }
-
-  // private showItemStatus(itemKey: string) {
-  //   new ItemStatus(this, this.scale.width / 2, this.scale.height / 2, itemKey);
-  // }
 }
