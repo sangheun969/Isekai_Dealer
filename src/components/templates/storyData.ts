@@ -4,7 +4,7 @@ interface StoryData {
   text: string;
   image: string | null;
   item?: string | null;
-  effect?: string | null; // effect는 선택적 속성으로 추가
+  effect?: string | null;
 }
 
 const storyData: StoryData[] = [

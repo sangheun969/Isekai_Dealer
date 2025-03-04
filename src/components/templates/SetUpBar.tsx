@@ -12,6 +12,14 @@ const SetUpBar: React.FC<SetUpBarProps> = ({ onClose, scene }) => {
   const [effectVolume, setEffectVolume] = useState<number>(0.5);
 
   useEffect(() => {
+    scene.input.enabled = false;
+
+    return () => {
+      scene.input.enabled = true;
+    };
+  }, [scene]);
+
+  useEffect(() => {
     const bgm = scene.registry.get("backgroundMusic") as
       | Phaser.Sound.WebAudioSound
       | undefined;
@@ -130,7 +138,10 @@ const SetUpBar: React.FC<SetUpBarProps> = ({ onClose, scene }) => {
 
         <button
           className="bg-gray-800 text-white px-4 py-2 rounded-md w-[150px] mb-4 absolute bottom-5 right-5"
-          onClick={onClose}
+          onClick={() => {
+            scene.input.enabled = true;
+            onClose();
+          }}
         >
           닫기
         </button>
