@@ -9,8 +9,8 @@ app.use(cors());
 app.use(express.json());
 
 app.post("/api/save", async (req, res) => {
-  const { money, items } = req.body;
-  saveGameProgress(money, items);
+  const { money, inventory, customerData } = req.body;
+  saveGameProgress(money, inventory, customerData);
   res.json({ success: true });
 });
 

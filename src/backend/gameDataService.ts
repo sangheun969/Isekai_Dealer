@@ -27,7 +27,8 @@ const setupDatabase = () => {
       CREATE TABLE IF NOT EXISTS game_progress (
         id INTEGER PRIMARY KEY UNIQUE,
         money INTEGER NOT NULL,
-        items TEXT NOT NULL
+        items TEXT NOT NULL,
+        customer_data TEXT NOT NULL
       )
     `);
   });
@@ -38,19 +39,31 @@ setupDatabase();
 
 interface GameProgress {
   money: number;
-  items: string;
+  items: any[];
+  customerData: any;
 }
 
-export const saveGameProgress = async (money: number, items: any[]) => {
+/**
+ * 📝 게임 진행 데이터 저장 함수
+ */
+export const saveGameProgress = async (
+  money: number,
+  items: any[],
+  customerData: any
+): Promise<void> => {
   const db = connectDB();
   return new Promise<void>((resolve, reject) => {
     const itemsJSON = JSON.stringify(items);
+    const customerDataJSON = JSON.stringify(customerData);
 
     db.run(
-      `INSERT INTO game_progress (id, money, items) 
-       VALUES (1, ?, ?) 
-       ON CONFLICT(id) DO UPDATE SET money = excluded.money, items = excluded.items`,
-      [money, itemsJSON],
+      `INSERT INTO game_progress (id, money, items, customer_data) 
+       VALUES (1, ?, ?, ?) 
+       ON CONFLICT(id) DO UPDATE 
+       SET money = excluded.money, 
+           items = excluded.items,
+           customer_data = excluded.customer_data;`,
+      [money, itemsJSON, customerDataJSON],
       (err) => {
         if (err) {
           console.error("❌ 저장 실패:", err.message);
@@ -69,7 +82,7 @@ export const saveGameProgress = async (money: number, items: any[]) => {
 export const loadGameProgress = async (): Promise<GameProgress | null> => {
   const db = connectDB();
   return new Promise((resolve, reject) => {
-    db.get("SELECT * FROM game_progress WHERE id = 1", (err, row) => {
+    db.get("SELECT * FROM game_progress WHERE id = 1", (err, row: any) => {
       db.close();
       if (err) {
         console.error("❌ 불러오기 실패:", err.message);
@@ -81,9 +94,16 @@ export const loadGameProgress = async (): Promise<GameProgress | null> => {
         resolve(null);
         return;
       }
-      const result = row as GameProgress;
       try {
-        resolve({ money: result.money, items: JSON.parse(result.items) });
+        resolve({
+          money: row.money,
+          items:
+            typeof row.items === "string" ? JSON.parse(row.items) : row.items,
+          customerData:
+            typeof row.customer_data === "string"
+              ? JSON.parse(row.customer_data)
+              : row.customer_data,
+        });
       } catch (parseError) {
         console.error("❌ 데이터 파싱 실패:", parseError);
         reject(parseError);

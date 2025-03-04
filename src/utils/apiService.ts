@@ -1,11 +1,15 @@
 const API_URL = "http://localhost:3001/api";
 
-export const saveGameProgress = async (money: number, items: any[]) => {
+export const saveGameProgress = async (
+  money: number,
+  items: any[],
+  customerData?: any
+) => {
   try {
     const response = await fetch(`${API_URL}/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ money, items }),
+      body: JSON.stringify({ money, items, customerData }),
     });
     const result = await response.json();
     if (result.success) {
@@ -18,7 +22,6 @@ export const saveGameProgress = async (money: number, items: any[]) => {
   }
 };
 
-// ✅ 게임 진행 데이터 불러오기
 export const loadGameProgress = async () => {
   try {
     const response = await fetch(`${API_URL}/load`);
