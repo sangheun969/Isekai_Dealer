@@ -7,6 +7,10 @@ import { createRoot, Root } from "react-dom/client";
 import React from "react";
 import { saveGameProgress } from "../utils/apiService";
 import PersonalityModal from "../components/templates/PersonalityModal";
+import {
+  getMinAcceptablePrice,
+  getResponseText,
+} from "../components/templates/priceEvaluation";
 
 export default class GameScene extends Phaser.Scene {
   private background: Phaser.GameObjects.Image | null = null;
@@ -469,7 +473,6 @@ export default class GameScene extends Phaser.Scene {
         () => {
           newButton2.destroy();
           newText2.destroy();
-
           const createInputField = (defaultValue = "") => {
             const inputElement = document.createElement("input");
             inputElement.type = "text";
@@ -525,84 +528,15 @@ export default class GameScene extends Phaser.Scene {
                   () => {
                     console.log(`제안 가격: ${price}코인`);
 
-                    let minAcceptablePrice = this.suggestedPrice;
-                    switch (this.currentClientPersonality) {
-                      case "호구":
-                        minAcceptablePrice = this.suggestedPrice / 4;
-                        break;
-                      case "철저한 협상가":
-                        minAcceptablePrice = this.suggestedPrice /2;
-                        break;
-                      case "도둑놈 기질":
-                        minAcceptablePrice = this.suggestedPrice /0.8;
-                        break;
-                      case "부유한 바보":
-                        minAcceptablePrice = 0;
-                        break;
-                      case "초보 수집가":
-                        minAcceptablePrice = this.suggestedPrice /4;
-                        break;
-                      case "화끈한 사람":
-                        minAcceptablePrice = this.suggestedPrice /4;
-                        break;
-                      case "수상한 밀수업자":
-                        minAcceptablePrice = this.suggestedPrice /2;
-                        break;
-                    }
-
-                    let responseText = `"${price}코인 이요?"`;
-
-                    if (price >= minAcceptablePrice) {
-                      switch (this.currentClientPersonality) {
-                        case "철저한 협상가":
-                          responseText = "이 정도면 괜찮겠군요.";
-                          break;
-                        case "도둑놈 기질":
-                          responseText = "이런 가격에 판다고요? 개이득!";
-                          break;
-                        case "부유한 바보":
-                          responseText =
-                            "오! 좋아요, 아무 가격이나 괜찮습니다!";
-                          break;
-                        case "초보 수집가":
-                          responseText = "이게 적정 가격일까요? 잘 모르겠네요.";
-                          break;
-                        case "화끈한 사람":
-                          responseText = "좋아! 바로 거래합시다!";
-                          break;
-                        case "수상한 밀수업자":
-                          responseText =
-                            "이 가격이면 나도 남는 게 없군. 거래하지.";
-                          break;
-                      }
-                    } else {
-                      switch (this.currentClientPersonality) {
-                        case "호구":
-                          responseText = "음... 그 정도 바보 아닙니다.";
-                          break;
-                        case "철저한 협상가":
-                          responseText =
-                            "이 가격은 말도 안 됩니다! 다시 생각해 보세요.";
-                          break;
-                        case "도둑놈 기질":
-                          responseText =
-                            "바가지 씌우려고 했는데, 안 넘어가시네...";
-                          break;
-                        case "부유한 바보":
-                          responseText = "이 가격은 좀 너무 낮은 것 같네요.";
-                          break;
-                        case "초보 수집가":
-                          responseText =
-                            "이 가격이 적정한지 모르겠어요... 조금 더 주세요!";
-                          break;
-                        case "화끈한 사람":
-                          responseText = "흥! 이렇게 나오시겠다?";
-                          break;
-                        case "수상한 밀수업자":
-                          responseText = "이 가격은 너무 낮군.";
-                          break;
-                      }
-                    }
+                    const minAcceptablePrice = getMinAcceptablePrice(
+                      this.suggestedPrice,
+                      this.currentClientPersonality as string
+                    );
+                    const responseText = getResponseText(
+                      price,
+                      minAcceptablePrice,
+                      this.currentClientPersonality as string
+                    );
 
                     if (this.speechText) {
                       this.speechText.setText(responseText);
@@ -698,11 +632,17 @@ export default class GameScene extends Phaser.Scene {
 
                           this.choiceButtonGroup?.add(newButton1);
                           this.choiceButtonGroup?.add(newText1);
+
+                          newButton1.setVisible(false);
+                          newText1.setVisible(false);
                         }
                       );
 
                     this.choiceButtonGroup?.add(yesButton);
                     this.choiceButtonGroup?.add(yesText);
+
+                    newButton1.setVisible(true);
+                    newText1.setVisible(true);
                   }
                 );
 
