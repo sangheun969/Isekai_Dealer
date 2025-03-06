@@ -258,8 +258,6 @@ export default class GameScene extends Phaser.Scene {
     this.currentItemData = Phaser.Math.RND.pick(itemInfo);
     this.currentClientPersonality = Phaser.Math.RND.pick(this.personalities);
 
-    console.log(`👤 새로운 손님 등장: 고객 ID ${this.currentCustomerId}`);
-
     const customerKey = `client${this.currentCustomerId}`;
     this.customer = this.add.image(width / 2, height + 220, customerKey);
     this.customer.setScale(0.6).setDepth(4).setOrigin(0.5, 1);
@@ -292,10 +290,6 @@ export default class GameScene extends Phaser.Scene {
       const maxPrice = Math.floor(this.money * maxPercentage);
       this.suggestedPrice =
         Math.floor(Phaser.Math.Between(minPrice, maxPrice) / 100) * 100;
-
-      console.log(
-        `💰 손님이 제안한 가격: ${this.suggestedPrice.toLocaleString()} 코인`
-      );
     }
 
     this.speechBubble = this.add
@@ -493,6 +487,11 @@ export default class GameScene extends Phaser.Scene {
             inputElement.style.color = "white";
             inputElement.style.textAlign = "center";
 
+            inputElement.addEventListener("input", (event) => {
+              const target = event.target as HTMLInputElement;
+              target.value = target.value.replace(/[^0-9]/g, "");
+            });
+
             const confirmButton = document.createElement("button");
             confirmButton.innerText = "확인";
             confirmButton.style.position = "absolute";
@@ -512,10 +511,9 @@ export default class GameScene extends Phaser.Scene {
             inputElement.focus();
 
             const handleInput = () => {
-              const price = inputElement.value.trim();
-              if (!price) return;
+              const price = Number(inputElement.value.trim());
+              if (isNaN(price)) return;
 
-              console.log("입력된 가격:", price);
               document.body.removeChild(inputElement);
               document.body.removeChild(confirmButton);
 
@@ -526,6 +524,185 @@ export default class GameScene extends Phaser.Scene {
                   `제안 가격: ${price}코인`,
                   () => {
                     console.log(`제안 가격: ${price}코인`);
+
+                    let minAcceptablePrice = this.suggestedPrice;
+                    switch (this.currentClientPersonality) {
+                      case "호구":
+                        minAcceptablePrice = this.suggestedPrice / 4;
+                        break;
+                      case "철저한 협상가":
+                        minAcceptablePrice = this.suggestedPrice /2;
+                        break;
+                      case "도둑놈 기질":
+                        minAcceptablePrice = this.suggestedPrice /0.8;
+                        break;
+                      case "부유한 바보":
+                        minAcceptablePrice = 0;
+                        break;
+                      case "초보 수집가":
+                        minAcceptablePrice = this.suggestedPrice /4;
+                        break;
+                      case "화끈한 사람":
+                        minAcceptablePrice = this.suggestedPrice /4;
+                        break;
+                      case "수상한 밀수업자":
+                        minAcceptablePrice = this.suggestedPrice /2;
+                        break;
+                    }
+
+                    let responseText = `"${price}코인 이요?"`;
+
+                    if (price >= minAcceptablePrice) {
+                      switch (this.currentClientPersonality) {
+                        case "철저한 협상가":
+                          responseText = "이 정도면 괜찮겠군요.";
+                          break;
+                        case "도둑놈 기질":
+                          responseText = "이런 가격에 판다고요? 개이득!";
+                          break;
+                        case "부유한 바보":
+                          responseText =
+                            "오! 좋아요, 아무 가격이나 괜찮습니다!";
+                          break;
+                        case "초보 수집가":
+                          responseText = "이게 적정 가격일까요? 잘 모르겠네요.";
+                          break;
+                        case "화끈한 사람":
+                          responseText = "좋아! 바로 거래합시다!";
+                          break;
+                        case "수상한 밀수업자":
+                          responseText =
+                            "이 가격이면 나도 남는 게 없군. 거래하지.";
+                          break;
+                      }
+                    } else {
+                      switch (this.currentClientPersonality) {
+                        case "호구":
+                          responseText = "음... 그 정도 바보 아닙니다.";
+                          break;
+                        case "철저한 협상가":
+                          responseText =
+                            "이 가격은 말도 안 됩니다! 다시 생각해 보세요.";
+                          break;
+                        case "도둑놈 기질":
+                          responseText =
+                            "바가지 씌우려고 했는데, 안 넘어가시네...";
+                          break;
+                        case "부유한 바보":
+                          responseText = "이 가격은 좀 너무 낮은 것 같네요.";
+                          break;
+                        case "초보 수집가":
+                          responseText =
+                            "이 가격이 적정한지 모르겠어요... 조금 더 주세요!";
+                          break;
+                        case "화끈한 사람":
+                          responseText = "흥! 이렇게 나오시겠다?";
+                          break;
+                        case "수상한 밀수업자":
+                          responseText = "이 가격은 너무 낮군.";
+                          break;
+                      }
+                    }
+
+                    if (this.speechText) {
+                      this.speechText.setText(responseText);
+                    }
+
+                    if (
+                      responseText === "음... 그 정도 바보 아닙니다." ||
+                      responseText ===
+                        "이 가격은 말도 안 됩니다! 다시 생각해 보세요." ||
+                      responseText === "이 가격은 좀 너무 낮은 것 같네요." ||
+                      responseText ===
+                        "이 가격이 적정한지 모르겠어요... 조금 더 주세요!" ||
+                      responseText === "흥! 이렇게 나오시겠다?" ||
+                      responseText === "이 가격은 너무 낮군."
+                    ) {
+                      return;
+                    }
+
+                    priceButton.destroy();
+                    priceText.destroy();
+                    newButton1.destroy();
+                    newText1.destroy();
+                    if (reinputButton) {
+                      reinputButton.destroy();
+                    }
+
+                    const { buttonGraphics: yesButton, buttonText: yesText } =
+                      this.createButton(
+                        width / 4,
+                        height / 1.8 + 60,
+                        "예",
+                        () => {
+                          if (this.speechText) {
+                            this.speechText.setText("음..알겠습니다.");
+                          }
+
+                          yesButton.destroy();
+                          yesText.destroy();
+                          const {
+                            buttonGraphics: newButton1,
+                            buttonText: newText1,
+                          } = this.createButton(
+                            width / 4,
+                            height / 1.8,
+                            "좋습니다.",
+                            () => {
+                              if (!this.selectedItemKey) {
+                                console.warn(
+                                  "🚨 아이템이 선택되지 않았습니다."
+                                );
+                                return;
+                              }
+                              const finalPrice = Number(price);
+
+                              if (this.money >= finalPrice) {
+                                this.money -= finalPrice;
+                                console.log(
+                                  `💰 ${this.money.toLocaleString()} 코인 남음`
+                                );
+
+                                if (this.moneyText) {
+                                  this.moneyText.setText(
+                                    `💰 ${this.money.toLocaleString()} 코인`
+                                  );
+                                }
+                                const item = itemInfo.find(
+                                  (i) =>
+                                    i.id ===
+                                    Number(
+                                      this.selectedItemKey?.replace("item", "")
+                                    )
+                                );
+                                if (item) {
+                                  this.inventory.push({
+                                    ...item,
+                                    price: finalPrice,
+                                  });
+                                  console.log("📦 인벤토리에 추가됨:", item);
+                                }
+
+                                this.cleanupUI();
+                                this.spawnRandomCustomer();
+                              } else {
+                                console.warn("잔액 부족! 거래할 수 없습니다.");
+                                if (this.speechText) {
+                                  this.speechText.setText(
+                                    "잔액이 부족합니다. 거래할 수 없습니다."
+                                  );
+                                }
+                              }
+                            }
+                          );
+
+                          this.choiceButtonGroup?.add(newButton1);
+                          this.choiceButtonGroup?.add(newText1);
+                        }
+                      );
+
+                    this.choiceButtonGroup?.add(yesButton);
+                    this.choiceButtonGroup?.add(yesText);
                   }
                 );
 
@@ -542,7 +719,7 @@ export default class GameScene extends Phaser.Scene {
                 priceText.destroy();
                 reinputButton.destroy();
 
-                createInputField(price);
+                createInputField(String(price));
               });
 
               this.choiceButtonGroup?.add(priceButton);
