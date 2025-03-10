@@ -1,61 +1,37 @@
 import sqlite3 from "sqlite3";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+interface GameProgressRow {
+  money: number;
+  items: string;
+  customer_data: string;
+}
 
-const dbPath = path.join(__dirname, "gameData.db");
 const sqlite = sqlite3.verbose();
+const dbPath = path.join(__dirname, "gameData.db");
+const db = new sqlite.Database(dbPath);
 
-const connectDB = () => {
-  return new sqlite.Database(
-    dbPath,
-    sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
-    (err) => {
-      if (err) {
-        console.error("❌ 데이터베이스 연결 실패:", err.message);
-      }
-    }
-  );
-};
-
-const setupDatabase = () => {
-  const db = connectDB();
+export const setupDatabase = () => {
   db.serialize(() => {
     db.run(`
       CREATE TABLE IF NOT EXISTS game_progress (
         id INTEGER PRIMARY KEY UNIQUE,
-        money INTEGER NOT NULL,
-        items TEXT NOT NULL,
-        customer_data TEXT NOT NULL
+        money INTEGER NOT NULL DEFAULT 100000,
+        items TEXT NOT NULL DEFAULT '[]',
+        customer_data TEXT NOT NULL DEFAULT '{}'
       )
     `);
   });
-  db.close();
 };
 
 setupDatabase();
 
-interface GameProgress {
-  money: number;
-  items: any[];
-  customerData: any;
-}
-
-/**
- * 📝 게임 진행 데이터 저장 함수
- */
-export const saveGameProgress = async (
+export const saveGameProgress = (
   money: number,
   items: any[],
-  customerData: any
-): Promise<void> => {
-  const db = connectDB();
+  customerData: any = {}
+) => {
   return new Promise<void>((resolve, reject) => {
-    const itemsJSON = JSON.stringify(items);
-    const customerDataJSON = JSON.stringify(customerData);
-
     db.run(
       `INSERT INTO game_progress (id, money, items, customer_data) 
        VALUES (1, ?, ?, ?) 
@@ -63,51 +39,60 @@ export const saveGameProgress = async (
        SET money = excluded.money, 
            items = excluded.items,
            customer_data = excluded.customer_data;`,
-      [money, itemsJSON, customerDataJSON],
+      [money, JSON.stringify(items), JSON.stringify(customerData)],
       (err) => {
         if (err) {
-          console.error("❌ 저장 실패:", err.message);
+          console.error("❌ 게임 데이터 저장 실패:", err.message);
           reject(err);
         } else {
-          console.log("✅ 게임 진행 데이터 저장 완료!");
+          console.log("✅ 게임 데이터 저장 성공!");
           resolve();
         }
       }
     );
-
-    db.close();
   });
 };
 
-export const loadGameProgress = async (): Promise<GameProgress | null> => {
-  const db = connectDB();
+export const loadGameProgress = (): Promise<{
+  money: number;
+  items: any[];
+  customerData: any;
+}> => {
   return new Promise((resolve, reject) => {
-    db.get("SELECT * FROM game_progress WHERE id = 1", (err, row: any) => {
-      db.close();
-      if (err) {
-        console.error("❌ 불러오기 실패:", err.message);
-        reject(err);
-        return;
-      }
-      if (!row) {
-        console.warn("⚠️ 저장된 게임 데이터가 없습니다.");
-        resolve(null);
-        return;
-      }
-      try {
-        resolve({
-          money: row.money,
-          items:
-            typeof row.items === "string" ? JSON.parse(row.items) : row.items,
-          customerData:
-            typeof row.customer_data === "string"
+    db.get(
+      "SELECT * FROM game_progress WHERE id = 1",
+      (err, row: GameProgressRow | undefined) => {
+        if (err) {
+          console.error("❌ 게임 데이터 불러오기 실패:", err.message);
+          reject(err);
+          return;
+        }
+
+        if (!row) {
+          console.warn(
+            "⚠️ 저장된 게임 데이터가 없습니다. 기본값을 사용합니다."
+          );
+          resolve({
+            money: 100000,
+            items: [],
+            customerData: {},
+          });
+          return;
+        }
+
+        try {
+          resolve({
+            money: row.money ?? 100000,
+            items: row.items ? JSON.parse(row.items) : [],
+            customerData: row.customer_data
               ? JSON.parse(row.customer_data)
-              : row.customer_data,
-        });
-      } catch (parseError) {
-        console.error("❌ 데이터 파싱 실패:", parseError);
-        reject(parseError);
+              : {},
+          });
+        } catch (parseError) {
+          console.error("❌ 데이터 파싱 실패:", parseError);
+          reject(parseError);
+        }
       }
-    });
+    );
   });
 };
