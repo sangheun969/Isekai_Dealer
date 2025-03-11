@@ -3,6 +3,7 @@ import React, { Component } from "react";
 interface ItemPurchaseModalProps {
   item: any;
   purchasePrice: number;
+  originalPrice: number; // ✅ 원
   onClose: () => void;
 }
 
@@ -31,7 +32,7 @@ class ItemPurchaseModal extends Component<
   };
 
   render() {
-    const { item, purchasePrice } = this.props;
+    const { item, purchasePrice, originalPrice } = this.props;
     const { isOpen } = this.state;
 
     if (!isOpen || !item) return null;
@@ -46,8 +47,12 @@ class ItemPurchaseModal extends Component<
             className="w-32 h-32 mx-auto my-4"
           />
           <p className="text-gray-600">{item.text}</p>
+          <p className="text-blue-600 font-bold">
+            💰 원래 구매 가격: {originalPrice.toLocaleString()} 코인
+          </p>
+
           <p className="text-green-600 font-bold">
-            🪙 구매 가격: {purchasePrice.toLocaleString()} 코인
+            🪙 판매 가격: {purchasePrice.toLocaleString()} 코인
           </p>
           <button
             onClick={this.handleClose}
