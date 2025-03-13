@@ -15,6 +15,8 @@ import PersonalityModal from "../components/templates/PersonalityModal";
 import {
   getMinAcceptablePrice,
   getResponseText,
+  getMinPurchasePrice,
+  getPurchaseResponseText,
 } from "../components/templates/priceEvaluation";
 
 export default class GameScene extends Phaser.Scene {
@@ -58,6 +60,7 @@ export default class GameScene extends Phaser.Scene {
   private reinputButton: Phaser.GameObjects.Image | null = null;
   private selectedItem: any | null = null; // ✅ 추가
   private purchasePrice: number = 0;
+  private negotiationAttempts: number = 0;
 
   private inventory: any[] = [];
 
@@ -640,6 +643,12 @@ export default class GameScene extends Phaser.Scene {
       );
     }
 
+    // 🚀 새로운 고객이 등장할 때마다 협상 횟수를 2~3으로 초기화
+    this.negotiationAttempts = Math.floor(Math.random() * 2) + 2;
+    console.log(
+      `🔄 새로운 고객 등장! 협상 가능 횟수: ${this.negotiationAttempts}`
+    );
+
     const { buttonImage: buttonImage3, buttonText: buttonText3 } =
       this.createImageButtonWithText(
         width / 3.6,
@@ -710,9 +719,9 @@ export default class GameScene extends Phaser.Scene {
             inputElement.style.position = "absolute";
             inputElement.style.left = `${width / 2 - 150}px`;
             inputElement.style.top = `${height / 2 - 20}px`;
-            inputElement.style.width = "300px";
-            inputElement.style.height = "60px";
-            inputElement.style.fontSize = "16px";
+            inputElement.style.width = "350px";
+            inputElement.style.height = "80px";
+            inputElement.style.fontSize = "24px";
             inputElement.style.padding = "5px";
             inputElement.style.border = "1px solid white";
             inputElement.style.background = "transparent";
@@ -771,6 +780,11 @@ export default class GameScene extends Phaser.Scene {
                 createInputField(String(price));
               });
               let negotiationAttempts = 0;
+
+              let minAcceptablePrice = getMinAcceptablePrice(
+                this.suggestedPrice,
+                this.currentClientPersonality as string
+              );
               const { buttonImage: buttonImage5, buttonText: buttonText5 } =
                 this.createImageButtonWithText(
                   width / 3.6,
@@ -778,11 +792,6 @@ export default class GameScene extends Phaser.Scene {
                   "speechBubble8",
                   `제안 가격: ${price}코인`,
                   () => {
-                    const minAcceptablePrice = getMinAcceptablePrice(
-                      this.suggestedPrice,
-                      this.currentClientPersonality as string
-                    );
-
                     let { response: responseText } = getResponseText(
                       price,
                       minAcceptablePrice,
@@ -919,62 +928,71 @@ export default class GameScene extends Phaser.Scene {
                         );
                       }
                     }
-
-                    const maxNegotiationAttempts =
-                      Math.floor(Math.random() * 2) + 2;
-
-                    if (negotiationAttempts >= maxNegotiationAttempts) {
-                      console.log("❌ 최대 협상 횟수 도달! 협상 종료");
-                      this.speechText?.setText(
-                        "그만하죠. 이 가격으로는 거래할 수 없습니다."
+                    if (price < minAcceptablePrice) {
+                      this.negotiationAttempts--;
+                      console.log(
+                        `🚨 협상 실패! 남은 시도 횟수: ${this.negotiationAttempts}`
                       );
-
-                      const { buttonImage: endButton, buttonText: endText } =
-                        this.createImageButtonWithText(
-                          width / 3.6,
-                          height / 1.5,
-                          "speechBubble8",
-                          "다음 고객",
-                          () => {
-                            endButton.destroy();
-                            endText.destroy();
-                            this.cleanupUI();
-                            this.spawnRandomCustomer();
-                          }
+                      if (this.negotiationAttempts <= 0) {
+                        console.log("❌ 최대 협상 횟수 도달! 협상 종료");
+                        this.speechText?.setText(
+                          "그만하죠. 이 가격으로는 거래할 수 없습니다."
                         );
 
-                      if (buttonImage5) buttonImage5.setVisible(false);
-                      if (buttonText5) buttonText5.setVisible(false);
-                      if (reinputButton) {
-                        reinputButton.setVisible(false);
+                        const { buttonImage: endButton, buttonText: endText } =
+                          this.createImageButtonWithText(
+                            width / 3.6,
+                            height / 1.5,
+                            "speechBubble8",
+                            "다음 고객",
+                            () => {
+                              endButton.destroy();
+                              endText.destroy();
+                              this.cleanupUI();
+                              const hasInventoryItems =
+                                this.inventory.length > 0;
+
+                              if (hasInventoryItems && Math.random() < 0.4) {
+                                this.spawnBuyer();
+                              } else {
+                                this.spawnRandomCustomer();
+                              }
+                            }
+                          );
+
+                        if (buttonImage5) buttonImage5.setVisible(false);
+                        if (buttonText5) buttonText5.setVisible(false);
+                        if (reinputButton) {
+                          reinputButton.setVisible(false);
+                        }
+
+                        this.choiceButtonGroup?.add(endButton);
+                        this.choiceButtonGroup?.add(endText);
+                        return;
                       }
 
-                      this.choiceButtonGroup?.add(endButton);
-                      this.choiceButtonGroup?.add(endText);
-                      return;
-                    }
+                      negotiationAttempts++;
 
-                    negotiationAttempts++;
-
-                    if (this.currentClientPersonality === "철저한 협상가") {
-                      this.suggestedPrice = Math.floor(
-                        this.suggestedPrice * 0.9
-                      );
-                      responseText = `이 가격은 말도 안 됩니다! 다시 생각해 보세요. ${this.suggestedPrice}코인은 어떨까요?`;
-                    } else if (
-                      this.currentClientPersonality === "도둑놈 기질"
-                    ) {
-                      this.suggestedPrice = Math.floor(
-                        this.suggestedPrice * 0.8
-                      );
-                      responseText = `너무 비싸요! ${this.suggestedPrice}코인이면 거래할게요.`;
-                    } else if (
-                      this.currentClientPersonality === "초보 수집가"
-                    ) {
-                      this.suggestedPrice = Math.floor(
-                        this.suggestedPrice * 0.95
-                      );
-                      responseText = `음... 좀 비싸지만 ${this.suggestedPrice}코인이라면 괜찮을 것 같아요.`;
+                      if (this.currentClientPersonality === "철저한 협상가") {
+                        this.suggestedPrice = Math.floor(
+                          this.suggestedPrice * 0.9
+                        );
+                        responseText = `이 가격은 말도 안 됩니다! 다시 생각해 보세요. ${this.suggestedPrice}코인은 어떨까요?`;
+                      } else if (
+                        this.currentClientPersonality === "도둑놈 기질"
+                      ) {
+                        this.suggestedPrice = Math.floor(
+                          this.suggestedPrice * 0.8
+                        );
+                        responseText = `너무 비싸요! ${this.suggestedPrice}코인이면 거래할게요.`;
+                      } else if (
+                        this.currentClientPersonality === "초보 수집가"
+                      ) {
+                        this.suggestedPrice = Math.floor(
+                          this.suggestedPrice * 0.95
+                        );
+                        responseText = `음... 좀 비싸지만 ${this.suggestedPrice}코인이라면 괜찮을 것 같아요.`;
+                      }
                     }
                   }
                 );
@@ -1173,17 +1191,6 @@ export default class GameScene extends Phaser.Scene {
 
   private setupNegotiationButtons(speechTextY: number) {
     const { width, height } = this.scale;
-    const buttonStartY = speechTextY + 50;
-
-    if (!this.purchasePrice) {
-      this.purchasePrice = Math.floor(Math.random() * 200) + 200;
-      console.log(
-        "🔧 this.purchasePrice가 없어서 기본값을 설정:",
-        this.purchasePrice
-      );
-    }
-
-    console.log("💰 현재 협상 가격:", this.purchasePrice);
 
     const { buttonImage: buttonImage6, buttonText: buttonText6 } =
       this.createImageButtonWithText(
@@ -1238,10 +1245,10 @@ export default class GameScene extends Phaser.Scene {
         "speechBubble8",
         "재협상을 하시죠.",
         () => {
-          console.log("🔄 구매 가격 협상 시작!");
-
           buttonImage7.destroy();
           buttonText7.destroy();
+          buttonImage6.setVisible(false);
+          buttonText6.setVisible(false);
 
           const createInputField = (defaultValue = "") => {
             const inputBg = this.add
@@ -1257,9 +1264,9 @@ export default class GameScene extends Phaser.Scene {
             inputElement.style.left = "50%";
             inputElement.style.top = "50%";
             inputElement.style.transform = "translate(-50%, -50%)";
-            inputElement.style.width = "300px";
-            inputElement.style.height = "60px";
-            inputElement.style.fontSize = "16px";
+            inputElement.style.width = "350px";
+            inputElement.style.height = "80px";
+            inputElement.style.fontSize = "24px";
             inputElement.style.padding = "5px";
             inputElement.style.border = "1px solid white";
             inputElement.style.background = "transparent";
@@ -1272,7 +1279,6 @@ export default class GameScene extends Phaser.Scene {
 
             const warningMessage = document.createElement("div");
             warningMessage.innerText = "협상 가격 이상만 가능합니다";
-            // warningMessage.style.zIndex = "100";
             warningMessage.style.position = "fixed";
             warningMessage.style.position = "absolute";
             warningMessage.style.opacity = "1";
@@ -1321,23 +1327,12 @@ export default class GameScene extends Phaser.Scene {
               }
             });
 
+            const purchasePrice = Math.floor(this.selectedItem.price * 1.2);
+            this.purchasePrice = purchasePrice;
             confirmButton.addEventListener("click", () => {
               const price = Number(inputElement.value.trim());
 
-              if (isNaN(price) || price <= 0) return;
-              console.log(
-                `입력된 가격: ${price}, 최소 협상 가격: ${this.purchasePrice}`
-              );
-              if (!this.purchasePrice) {
-                this.purchasePrice = Math.floor(Math.random() * 200) + 200;
-                console.log(
-                  "🔧 this.purchasePrice가 없어서 기본값을 설정:",
-                  this.purchasePrice
-                );
-              }
-
               if (price < this.purchasePrice) {
-                console.log("❌ 가격이 너무 낮음! warningMessage 표시");
                 warningMessage.style.display = "block";
 
                 if (document.body.contains(warningMessage)) {
@@ -1373,42 +1368,134 @@ export default class GameScene extends Phaser.Scene {
                     width / 3.6,
                     height / 1.5,
                     "speechBubble8",
-                    "예",
+                    `${price.toLocaleString()}코인에 해드리겠습니다.`,
                     () => {
-                      this.speechText?.setText("좋아요! 거래합시다.");
+                      const minPurchasePrice = getMinPurchasePrice(
+                        this.suggestedPrice,
+                        this.currentClientPersonality as string
+                      );
+
+                      const maxMultipliers: Record<string, number> = {
+                        호구: 2.5,
+                        "철저한 협상가": 1.2,
+                        "도둑놈 기질": 1.5,
+                        "부유한 바보": 3.0,
+                        "초보 수집가": 1.8,
+                        "화끈한 사람": 2.0,
+                        "수상한 밀수업자": 1.6,
+                      };
+                      const personality =
+                        this.currentClientPersonality ?? "철저한 협상가";
+                      const maxNegotiationPrice =
+                        this.suggestedPrice *
+                        (maxMultipliers[personality] || 2.0);
+
+                      const { response: negotiationResponse, isFinal } =
+                        getPurchaseResponseText(
+                          price,
+                          minPurchasePrice,
+                          this.currentClientPersonality as string,
+                          this.suggestedPrice,
+                          maxNegotiationPrice
+                        );
+
+                      if (this.speechText) {
+                        this.speechText.setText(negotiationResponse);
+                      }
 
                       yesButton.destroy();
                       yesText.destroy();
+                      buttonImage6.setVisible(false);
+                      buttonText6.setVisible(false);
 
-                      const {
-                        buttonImage: confirmButton,
-                        buttonText: confirmText,
-                      } = this.createImageButtonWithText(
-                        width / 3.6,
-                        height / 1.5,
-                        "speechBubble8",
-                        "판매하기",
-                        () => {
-                          if (this.moneyImage) {
-                            this.moneyImage.destroy();
-                            this.moneyImage = null;
+                      if (!isFinal) {
+                        yesText.setText(
+                          `${price.toLocaleString()}코인에 해드리겠습니다.`
+                        );
+
+                        const reinputButton = this.add
+                          .image(
+                            width / 4 + 230,
+                            height / 1.8 + 120,
+                            "reinputIcon"
+                          )
+                          .setScale(0.1)
+                          .setDepth(8)
+                          .setInteractive();
+
+                        reinputButton.on("pointerdown", () => {
+                          console.log("🔄 재입력 버튼 클릭됨!");
+
+                          yesButton.setVisible(false);
+                          yesText.setVisible(false);
+                          reinputButton.setVisible(false);
+
+                          this.setupNegotiationButtons(height / 1.5);
+                        });
+
+                        this.choiceButtonGroup?.add(reinputButton);
+                        return;
+                      }
+
+                      if (isFinal) {
+                        const {
+                          buttonImage: confirmButton,
+                          buttonText: confirmText,
+                        } = this.createImageButtonWithText(
+                          width / 3.6,
+                          height / 1.5,
+                          "speechBubble8",
+                          "판매하기",
+                          () => {
+                            if (this.moneyImage) {
+                              this.moneyImage.destroy();
+                              this.moneyImage = null;
+                            }
+
+                            this.handleItemSale(this.selectedItem, price);
+
+                            this.cleanupUI();
+                            const hasInventoryItems = this.inventory.length > 0;
+
+                            if (hasInventoryItems && Math.random() < 0.4) {
+                              this.spawnBuyer();
+                            } else {
+                              this.spawnRandomCustomer();
+                            }
                           }
+                        );
 
-                          this.handleItemSale(this.selectedItem, price);
+                        this.choiceButtonGroup?.add(confirmButton);
+                        this.choiceButtonGroup?.add(confirmText);
+                      } else {
+                        const newSuggestedPrice = Math.floor(
+                          minPurchasePrice * 1.1
+                        );
 
-                          this.cleanupUI();
-                          const hasInventoryItems = this.inventory.length > 0;
+                        const {
+                          buttonImage: reNegotiateButton,
+                          buttonText: reNegotiateText,
+                        } = this.createImageButtonWithText(
+                          width / 3.6,
+                          height / 1.5,
+                          "speechBubble8",
+                          `그럼 ${newSuggestedPrice.toLocaleString()}코인에 어떠세요?`,
+                          () => {
+                            if (this.speechText) {
+                              this.speechText.setText(
+                                `${newSuggestedPrice.toLocaleString()}코인에 어떠세요?`
+                              );
+                            }
 
-                          if (hasInventoryItems && Math.random() < 0.4) {
-                            this.spawnBuyer();
-                          } else {
-                            this.spawnRandomCustomer();
+                            reNegotiateButton.destroy();
+                            reNegotiateText.destroy();
+
+                            this.setupNegotiationButtons(height / 1.5);
                           }
-                        }
-                      );
-
-                      this.choiceButtonGroup?.add(confirmButton);
-                      this.choiceButtonGroup?.add(confirmText);
+                        );
+                        this.choiceButtonGroup?.add(reNegotiateButton);
+                        this.choiceButtonGroup?.add(reNegotiateText);
+                      }
                     }
                   );
 
