@@ -182,56 +182,56 @@ export function getPurchaseResponseText(
     switch (personality) {
       case "호구":
         return {
-          response: `음... ${Math.floor(
+          response: `음... 💰${Math.floor(
             Math.min(clientOriginalPrice * 1.5, maxNegotiationPrice)
           )}코인은 어떠세요?`,
           isFinal: false,
         };
       case "철저한 협상가":
         return {
-          response: `이 가격은 너무 높습니다! ${Math.floor(
+          response: `이 가격은 너무 높습니다! 💰${Math.floor(
             Math.min(clientOriginalPrice * 1.2, maxNegotiationPrice)
           )}코인이라면 고려해보죠.`,
           isFinal: false,
         };
       case "도둑놈 기질":
         return {
-          response: `이 가격으론 안 돼요! ${Math.floor(
+          response: `이 가격으론 안 돼요! 💰${Math.floor(
             Math.min(clientOriginalPrice * 1.5, maxNegotiationPrice)
           )}코인까지 깎아주면 사겠습니다.`,
           isFinal: false,
         };
       case "부유한 바보":
         return {
-          response: `이 가격은 적당한가요? ${Math.floor(
+          response: `이 가격은 적당한가요? 💰${Math.floor(
             Math.min(clientOriginalPrice * 1.7, maxNegotiationPrice)
           )}코인에 사겠습니다!`,
           isFinal: false,
         };
       case "초보 수집가":
         return {
-          response: `이게 적정 가격일까요? ${Math.floor(
+          response: `이게 적정 가격일까요? 💰${Math.floor(
             Math.min(clientOriginalPrice * 1.3, maxNegotiationPrice)
           )}코인에 주시면 사겠습니다!`,
           isFinal: false,
         };
       case "화끈한 사람":
         return {
-          response: `너무 비싸잖아! ${Math.floor(
+          response: `너무 비싸잖아! 💰${Math.floor(
             Math.min(clientOriginalPrice * 1.8, maxNegotiationPrice)
           )}코인까지 내려주세요!`,
           isFinal: false,
         };
       case "수상한 밀수업자":
         return {
-          response: `이 가격은 너무 높군. ${Math.floor(
+          response: `이 가격은 너무 높군. 💰${Math.floor(
             Math.min(clientOriginalPrice * 1.6, maxNegotiationPrice)
           )}코인에 팔면 바로 사겠습니다.`,
           isFinal: false,
         };
       default:
         return {
-          response: `"${clientOriginalPrice}코인 이요? ${Math.floor(
+          response: `"💰${clientOriginalPrice}코인 이요? ${Math.floor(
             Math.min(clientOriginalPrice * 0.9, maxNegotiationPrice)
           )}코인이라면 거래합시다."`,
           isFinal: false,

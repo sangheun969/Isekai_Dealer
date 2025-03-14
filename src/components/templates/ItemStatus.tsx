@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import itemInfo from "../organisms/itemInfo";
 
 class ItemStatus extends Phaser.GameObjects.Container {
-  private background?: Phaser.GameObjects.Graphics;
+  private background?: Phaser.GameObjects.Image;
   private itemImage?: Phaser.GameObjects.Image;
   private itemNameText?: Phaser.GameObjects.Text;
   private itemDescriptionText?: Phaser.GameObjects.Text;
@@ -17,42 +17,48 @@ class ItemStatus extends Phaser.GameObjects.Container {
       return;
     }
 
-    this.background = scene.add.graphics();
-    this.background.fillStyle(0x222222, 0.8);
-    this.background.fillRoundedRect(-150, -100, 300, 600, 10);
+    const offsetX = -200;
+
+    this.background = scene.add.image(offsetX, 0, "statsImg2");
+    this.background.setDisplaySize(550, 850);
     this.add(this.background);
+
     this.itemImage = scene.add
-      .image(0, -50, `item${item.id}`)
-      .setScale(0.4)
+      .image(offsetX, -180, `item${item.id}`)
+      .setScale(0.5)
       .setDepth(10);
+
     this.add(this.itemImage);
 
     this.itemNameText = scene.add
-      .text(0, -10, item.name, {
-        fontSize: "18px",
-        color: "#ffffff",
+      .text(offsetX, 10, item.name, {
+        fontSize: "32px",
+        color: "#070606",
         align: "center",
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setPadding(0, 15, 0, 15);
     this.add(this.itemNameText);
 
     this.itemDescriptionText = scene.add
-      .text(0, 20, item.text, {
-        fontSize: "14px",
-        color: "#cccccc",
+      .text(offsetX, 160, item.text, {
+        fontSize: "24px",
+        color: "#252525",
         wordWrap: { width: 250 },
         align: "center",
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setPadding(0, 15, 0, 15);
     this.add(this.itemDescriptionText);
 
     this.itemRarityText = scene.add
-      .text(0, 70, `희귀도: ${item.rarity}`, {
-        fontSize: "16px",
-        color: "#ffcc00",
+      .text(offsetX, 50, `희귀도: ${item.rarity}`, {
+        fontSize: "24px",
+        color: "#8a5301",
         align: "center",
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setPadding(0, 15, 0, 15);
     this.add(this.itemRarityText);
 
     scene.add.existing(this);

@@ -7,6 +7,7 @@ import { createRoot, Root } from "react-dom/client";
 import React from "react";
 // import { saveGameProgress, loadGameProgress } from "../backend/gameDataService";
 import { saveGameProgress, loadGameProgress } from "../utils/apiService";
+import EndOfDayModal from "../components/templates/EndOfDayModalProps";
 
 import ClientPurchaseScene from "../components/templates/ClientPurchaseScene";
 import ItemPurchaseModal from "../components/organisms/ItemPurchaseModal";
@@ -58,9 +59,15 @@ export default class GameScene extends Phaser.Scene {
   private currentClient: Phaser.GameObjects.Image | null = null;
   private moneyImage: Phaser.GameObjects.Image | null = null;
   private reinputButton: Phaser.GameObjects.Image | null = null;
-  private selectedItem: any | null = null; // ✅ 추가
+  private selectedItem: any | null = null;
   private purchasePrice: number = 0;
   private negotiationAttempts: number = 0;
+  private dailyClientCount: number = 0;
+  private todayPurchaseAmount: number = 0;
+  private todaySalesAmount: number = 0;
+  private todayPurchaseCount: number = 0;
+  private todaySalesCount: number = 0;
+  private dailyClientText: Phaser.GameObjects.Text | null = null;
 
   private inventory: any[] = [];
 
@@ -166,8 +173,9 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("amountPaid1", "/images/items/moneyCoin2.png");
     this.load.image("amountPaid2", "/images/items/moneyCoin4.png");
     this.load.image("reinputPrice", "/images/background/reinputPrice.png");
+    this.load.image("statsImg2", "/images/background/statsImg2.png");
 
-    for (let i = 1; i <= 14; i++) {
+    for (let i = 1; i <= 18; i++) {
       this.load.image(`client${i}`, `/images/npc/client${i}.png`);
     }
   }
@@ -237,6 +245,15 @@ export default class GameScene extends Phaser.Scene {
         await saveGameProgress(this.money, this.inventory);
       });
 
+    this.dailyClientText = this.add
+      .text(width - 140, 90, `${this.dailyClientCount}명/8`, {
+        fontSize: "28px",
+        color: "#fff",
+        padding: { left: 10, right: 10, top: 5, bottom: 5 },
+      })
+      .setDepth(10)
+      .setOrigin(1, 0);
+
     const list1 = this.add.image(width * 0.1, height * 0.85, "list1");
     list1.setScale(0.4).setDepth(6).setOrigin(0.5, 0.5);
     list1.setInteractive();
@@ -260,6 +277,20 @@ export default class GameScene extends Phaser.Scene {
       money: this.money,
       openModal: this.setModalState,
     });
+  }
+
+  private incrementDailyClientCount() {
+    this.dailyClientCount++;
+    console.log(`📅 오늘 방문한 고객 수: ${this.dailyClientCount}명`);
+
+    if (this.dailyClientText) {
+      this.dailyClientText.setText(` ${this.dailyClientCount}명/8`);
+    }
+
+    if (this.dailyClientCount > 8) {
+      console.log("🔔 하루 마감! 정산 모달을 띄웁니다.");
+      this.showEndOfDayModal();
+    }
   }
 
   private cleanupUI() {
@@ -518,6 +549,8 @@ export default class GameScene extends Phaser.Scene {
       )
       .setOrigin(0.5)
       .setDepth(7);
+
+    this.incrementDailyClientCount();
     if (this.choiceButtonGroup) {
       this.choiceButtonGroup.getChildren().forEach((child) => {
         if (
@@ -639,11 +672,10 @@ export default class GameScene extends Phaser.Scene {
 
     if (this.speechText) {
       this.speechText.setText(
-        `${this.suggestedPrice.toLocaleString()}코인에 팔고 싶습니다.`
+        `💰${this.suggestedPrice.toLocaleString()}코인에 팔고 싶습니다.`
       );
     }
 
-    // 🚀 새로운 고객이 등장할 때마다 협상 횟수를 2~3으로 초기화
     this.negotiationAttempts = Math.floor(Math.random() * 2) + 2;
     console.log(
       `🔄 새로운 고객 등장! 협상 가능 횟수: ${this.negotiationAttempts}`
@@ -663,7 +695,8 @@ export default class GameScene extends Phaser.Scene {
 
           if (this.money >= this.suggestedPrice) {
             this.money -= this.suggestedPrice;
-            console.log(`💰 ${this.money.toLocaleString()} 코인 남음`);
+            this.todayPurchaseAmount += this.suggestedPrice;
+            this.todayPurchaseCount++;
 
             if (this.moneyText) {
               this.moneyText.setText(`💰 ${this.money.toLocaleString()} 코인`);
@@ -727,7 +760,7 @@ export default class GameScene extends Phaser.Scene {
             inputElement.style.background = "transparent";
             inputElement.style.color = "white";
             inputElement.style.textAlign = "center";
-            inputElement.style.outline = "none"; // ✅
+            inputElement.style.outline = "none";
 
             inputElement.addEventListener("input", (event) => {
               const target = event.target as HTMLInputElement;
@@ -860,6 +893,8 @@ export default class GameScene extends Phaser.Scene {
                                   return;
                                 }
                                 const finalPrice = Number(price);
+                                this.todayPurchaseAmount += this.suggestedPrice;
+                                this.todayPurchaseCount++;
 
                                 if (this.money >= finalPrice) {
                                   this.money -= finalPrice;
@@ -977,21 +1012,21 @@ export default class GameScene extends Phaser.Scene {
                         this.suggestedPrice = Math.floor(
                           this.suggestedPrice * 0.9
                         );
-                        responseText = `이 가격은 말도 안 됩니다! 다시 생각해 보세요. ${this.suggestedPrice}코인은 어떨까요?`;
+                        responseText = `이 가격은 말도 안 됩니다! 다시 생각해 보세요. 💰${this.suggestedPrice}코인은 어떨까요?`;
                       } else if (
                         this.currentClientPersonality === "도둑놈 기질"
                       ) {
                         this.suggestedPrice = Math.floor(
                           this.suggestedPrice * 0.8
                         );
-                        responseText = `너무 비싸요! ${this.suggestedPrice}코인이면 거래할게요.`;
+                        responseText = `너무 비싸요! 💰${this.suggestedPrice}코인이면 거래할게요.`;
                       } else if (
                         this.currentClientPersonality === "초보 수집가"
                       ) {
                         this.suggestedPrice = Math.floor(
                           this.suggestedPrice * 0.95
                         );
-                        responseText = `음... 좀 비싸지만 ${this.suggestedPrice}코인이라면 괜찮을 것 같아요.`;
+                        responseText = `음... 좀 비싸지만 💰${this.suggestedPrice}코인이라면 괜찮을 것 같아요.`;
                       }
                     }
                   }
@@ -1164,12 +1199,17 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(6);
 
     this.setupNegotiationButtons(this.speechText.y + 50);
+
+    this.incrementDailyClientCount();
   }
 
   private handleItemSale(soldItem: any, salePrice: number) {
     console.log(
       `✅ ${soldItem.name}을 ${salePrice.toLocaleString()}코인에 판매했습니다!`
     );
+
+    this.todaySalesAmount += salePrice;
+    this.todaySalesCount++;
 
     this.inventory = this.inventory.filter((item) => item.id !== soldItem.id);
 
@@ -1220,6 +1260,10 @@ export default class GameScene extends Phaser.Scene {
 
           const soldItem = this.inventory[itemIndex];
           const salePrice = Math.floor(soldItem.price * 1.2);
+
+          this.todaySalesAmount += salePrice;
+          this.todaySalesCount++;
+
           this.inventory.splice(itemIndex, 1);
           this.money += salePrice;
 
@@ -1452,6 +1496,9 @@ export default class GameScene extends Phaser.Scene {
                               this.moneyImage = null;
                             }
 
+                            this.todaySalesAmount += price;
+                            this.todaySalesCount++;
+
                             this.handleItemSale(this.selectedItem, price);
 
                             this.cleanupUI();
@@ -1569,5 +1616,51 @@ export default class GameScene extends Phaser.Scene {
       this.modalContainer = null;
       this.modalRoot = null;
     }
+  }
+
+  private showEndOfDayModal() {
+    if (document.getElementById("end-of-day-modal")) return;
+
+    this.input.enabled = false;
+
+    const modalContainer = document.createElement("div");
+    modalContainer.id = "end-of-day-modal";
+    document.body.appendChild(modalContainer);
+
+    const closeModal = () => {
+      this.closeEndOfDayModal();
+    };
+
+    if (!this.modalRoot) {
+      this.modalRoot = createRoot(modalContainer);
+    }
+
+    this.modalRoot.render(
+      <EndOfDayModal
+        purchases={this.todayPurchaseAmount}
+        sales={this.todaySalesAmount}
+        purchaseCount={this.todayPurchaseCount}
+        salesCount={this.todaySalesCount}
+        revenue={this.todaySalesAmount - this.todayPurchaseAmount}
+        onClose={closeModal}
+      />
+    );
+  }
+
+  private closeEndOfDayModal() {
+    const modalContainer = document.getElementById("end-of-day-modal");
+    if (modalContainer && this.modalRoot) {
+      this.modalRoot.unmount();
+      this.modalRoot = null;
+      document.body.removeChild(modalContainer);
+    }
+    this.input.enabled = true;
+
+    // 데이터 초기화 (새로운 하루 시작)
+    this.dailyClientCount = 0;
+    this.todayPurchaseAmount = 0;
+    this.todaySalesAmount = 0;
+    this.todayPurchaseCount = 0;
+    this.todaySalesCount = 0;
   }
 }
