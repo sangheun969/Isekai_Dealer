@@ -1,4 +1,5 @@
 import React from "react";
+import { getGameInstance } from "../../App";
 
 interface EndOfDayModalProps {
   purchases: number;
@@ -30,9 +31,34 @@ const EndOfDayModal: React.FC<EndOfDayModalProps> = ({
         </p>
         <button
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-          onClick={onClose}
+          onClick={() => {
+            onClose();
+
+            let game = getGameInstance();
+            if (game) {
+              console.log(
+                "✅ Phaser 인스턴스를 찾음. Noticeboard 씬으로 이동."
+              );
+              game.scene.pause("GameScene");
+              game.scene.start("Noticeboard");
+            } else {
+              console.warn(
+                "⚠️ Phaser 인스턴스를 찾을 수 없음. 0.5초 후 다시 시도."
+              );
+
+              setTimeout(() => {
+                game = getGameInstance();
+                if (game) {
+                  console.log("✅ 재시도 후 Phaser 인스턴스를 찾음.");
+                  game.scene.start("Noticeboard");
+                } else {
+                  console.error("❌ Phaser 인스턴스를 끝까지 찾을 수 없음.");
+                }
+              }, 500);
+            }
+          }}
         >
-          닫기
+          다음
         </button>
       </div>
     </div>

@@ -5,6 +5,9 @@ import Scenes from "./game/Scenes";
 import SelectMain from "./game/SelectMain";
 import StoryScene from "./game/StoryScene";
 import GameScene from "./game/GameScene";
+import Noticeboard from "./game/Noticeboard";
+
+let gameInstance: Phaser.Game | null = null;
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -12,21 +15,32 @@ const App: React.FC = () => {
       type: Phaser.AUTO,
       width: window.innerWidth,
       height: window.innerHeight,
-      scene: [BootScene, Scenes, SelectMain, StoryScene, GameScene],
+      scene: [
+        BootScene,
+        Scenes,
+        SelectMain,
+        StoryScene,
+        GameScene,
+        Noticeboard,
+      ],
       parent: "phaser-game-container",
       audio: {
         disableWebAudio: false,
       },
     };
 
-    const game = new Phaser.Game(config);
-
+    gameInstance = new Phaser.Game(config);
     return () => {
-      game.destroy(true);
+      if (gameInstance) {
+        gameInstance.destroy(true);
+        gameInstance = null;
+      }
     };
   }, []);
 
   return <div id="phaser-game-container" className="w-full h-screen"></div>;
 };
+
+export const getGameInstance = (): Phaser.Game | null => gameInstance;
 
 export default App;

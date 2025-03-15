@@ -9,7 +9,6 @@ import React from "react";
 import { saveGameProgress, loadGameProgress } from "../utils/apiService";
 import EndOfDayModal from "../components/templates/EndOfDayModalProps";
 
-import ClientPurchaseScene from "../components/templates/ClientPurchaseScene";
 import ItemPurchaseModal from "../components/organisms/ItemPurchaseModal";
 import PersonalityModal from "../components/templates/PersonalityModal";
 
@@ -81,6 +80,35 @@ export default class GameScene extends Phaser.Scene {
     "수상한 밀수업자",
   ];
 
+  public getMoney(): number {
+    return this.money;
+  }
+
+  // ✅ 외부에서 inventory 값을 읽기 위한 getter
+  public getInventory(): any[] {
+    return this.inventory;
+  }
+
+  // ✅ 외부에서 dailyClientCount를 변경할 수 있도록 setter 추가
+  public setDailyClientCount(value: number) {
+    this.dailyClientCount = value;
+    if (this.dailyClientText) {
+      this.dailyClientText.setText(`${this.dailyClientCount}명/8`);
+    }
+  }
+
+  // ✅ 고객 관련 정보 초기화 함수 추가
+  public resetCustomerData() {
+    this.currentCustomerId = null;
+    this.currentClientPersonality = null;
+    this.currentItemData = null;
+  }
+
+  // ✅ 고객 재생성 함수 추가
+  public spawnNewCustomer() {
+    this.spawnRandomCustomer();
+  }
+
   constructor() {
     super({ key: "GameScene" });
     this.price = 0;
@@ -148,6 +176,8 @@ export default class GameScene extends Phaser.Scene {
       this.money = data.savedData.money;
       this.inventory = data.savedData.items;
 
+      this.dailyClientCount = 1;
+
       if (data.savedData.customer) {
         this.currentCustomerId = data.savedData.customer.customerId;
         this.currentClientPersonality = data.savedData.customer.personality;
@@ -175,7 +205,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("reinputPrice", "/images/background/reinputPrice.png");
     this.load.image("statsImg2", "/images/background/statsImg2.png");
 
-    for (let i = 1; i <= 18; i++) {
+    for (let i = 1; i <= 16; i++) {
       this.load.image(`client${i}`, `/images/npc/client${i}.png`);
     }
   }
@@ -285,15 +315,24 @@ export default class GameScene extends Phaser.Scene {
 
     if (this.dailyClientText) {
       this.dailyClientText.setText(` ${this.dailyClientCount}명/8`);
+    } else {
+      console.warn(
+        "⚠️ dailyClientText가 존재하지 않아 업데이트할 수 없습니다."
+      );
     }
 
     if (this.dailyClientCount > 8) {
-      console.log("🔔 하루 마감! 정산 모달을 띄웁니다.");
       this.showEndOfDayModal();
+
+      // this.dailyClientCount = 1;
+    }
+
+    if (this.dailyClientText) {
+      this.dailyClientText.setText(`${this.dailyClientCount}명/8`);
     }
   }
 
-  private cleanupUI() {
+  public cleanupUI() {
     if (this.currentItem) {
       this.currentItem.destroy();
       this.currentItem = null;
@@ -468,7 +507,7 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  private spawnRandomCustomer() {
+  public spawnRandomCustomer() {
     const { width, height } = this.scale;
 
     this.clearClientUI();
@@ -617,9 +656,19 @@ export default class GameScene extends Phaser.Scene {
   }
 
   private loadItem(itemData: any) {
-    if (this.currentItem) this.currentItem.destroy();
+    if (this.currentItem) {
+      console.log(`🗑️ 이전 아이템 (${this.currentItemKey}) 제거`);
+      this.currentItem.destroy();
+      this.currentItem = null;
+      this.currentItemKey = null;
+    }
 
     const itemKey = `item${itemData.id}`;
+    if (this.currentItemKey === itemKey) {
+      console.warn(`⚠️ 중복 아이템 (${itemKey}) 로드 방지`);
+      return;
+    }
+
     if (!this.textures.exists(itemKey)) {
       this.load.image(itemKey, itemData.image);
       this.load.once("complete", () => {
@@ -1122,7 +1171,7 @@ export default class GameScene extends Phaser.Scene {
     this.input.enabled = true;
   }
 
-  private spawnBuyer() {
+  public spawnBuyer() {
     const { width, height } = this.scale;
 
     this.clearClientUI();
@@ -1223,12 +1272,17 @@ export default class GameScene extends Phaser.Scene {
     this.saveGameState();
   }
 
-  private cleanupBuyerUI() {
+  public cleanupBuyerUI() {
+    if (this.moneyImage) {
+      this.moneyImage.destroy();
+      this.moneyImage = null;
+      console.log("💰 돈 이미지 제거 완료!");
+    }
+
     this.choiceButtonGroup?.clear(true, true);
     this.choiceButtonGroup?.destroy();
     this.choiceButtonGroup = this.add.group();
   }
-
   private setupNegotiationButtons(speechTextY: number) {
     const { width, height } = this.scale;
 
@@ -1468,8 +1522,6 @@ export default class GameScene extends Phaser.Scene {
                           .setInteractive();
 
                         reinputButton.on("pointerdown", () => {
-                          console.log("🔄 재입력 버튼 클릭됨!");
-
                           yesButton.setVisible(false);
                           yesText.setVisible(false);
                           reinputButton.setVisible(false);
@@ -1655,8 +1707,6 @@ export default class GameScene extends Phaser.Scene {
       document.body.removeChild(modalContainer);
     }
     this.input.enabled = true;
-
-    // 데이터 초기화 (새로운 하루 시작)
     this.dailyClientCount = 0;
     this.todayPurchaseAmount = 0;
     this.todaySalesAmount = 0;
