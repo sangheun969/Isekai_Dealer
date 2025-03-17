@@ -84,12 +84,10 @@ export default class GameScene extends Phaser.Scene {
     return this.money;
   }
 
-  // ✅ 외부에서 inventory 값을 읽기 위한 getter
   public getInventory(): any[] {
     return this.inventory;
   }
 
-  // ✅ 외부에서 dailyClientCount를 변경할 수 있도록 setter 추가
   public setDailyClientCount(value: number) {
     this.dailyClientCount = value;
     if (this.dailyClientText) {
@@ -97,14 +95,12 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  // ✅ 고객 관련 정보 초기화 함수 추가
   public resetCustomerData() {
     this.currentCustomerId = null;
     this.currentClientPersonality = null;
     this.currentItemData = null;
   }
 
-  // ✅ 고객 재생성 함수 추가
   public spawnNewCustomer() {
     this.spawnRandomCustomer();
   }
@@ -128,8 +124,6 @@ export default class GameScene extends Phaser.Scene {
       if (this.moneyText) {
         this.moneyText.setText(`💰 ${this.money.toLocaleString()} 코인`);
       }
-
-      console.log("✅ 게임 데이터 저장 성공!");
     } catch (error) {
       console.error("❌ 게임 데이터 저장 실패:", error);
     }
@@ -192,6 +186,9 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("pawnShopBackground3", "/images/background/storeBg5.png");
     this.load.image("table2", "/images/background/table2.png");
     this.load.image("list1", "/images/background/list1.png");
+    this.load.image("list2", "/images/background/list2.png");
+    this.load.image("list3", "/images/background/list3.png");
+    this.load.image("list4", "/images/background/list4.png");
     this.load.image("speechBubble9", "/images/background/speechBubble9.png");
     this.load.image("speechBubble6", "/images/background/speechBubble6.png");
     this.load.image("speechBubble8", "/images/background/speechBubble8.png");
@@ -284,8 +281,8 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(10)
       .setOrigin(1, 0);
 
-    const list1 = this.add.image(width * 0.1, height * 0.85, "list1");
-    list1.setScale(0.4).setDepth(6).setOrigin(0.5, 0.5);
+    const list1 = this.add.image(width * 0.1, height * 0.85, "list4");
+    list1.setScale(0.5).setDepth(6).setOrigin(0.3, 0.5);
     list1.setInteractive();
     list1.on("pointerdown", () => {
       this.openItemList();
@@ -311,7 +308,6 @@ export default class GameScene extends Phaser.Scene {
 
   private incrementDailyClientCount() {
     this.dailyClientCount++;
-    console.log(`📅 오늘 방문한 고객 수: ${this.dailyClientCount}명`);
 
     if (this.dailyClientText) {
       this.dailyClientText.setText(` ${this.dailyClientCount}명/8`);
@@ -323,8 +319,6 @@ export default class GameScene extends Phaser.Scene {
 
     if (this.dailyClientCount > 8) {
       this.showEndOfDayModal();
-
-      // this.dailyClientCount = 1;
     }
 
     if (this.dailyClientText) {

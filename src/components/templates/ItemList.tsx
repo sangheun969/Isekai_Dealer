@@ -22,7 +22,7 @@ const ItemList: React.FC<ItemListProps> = ({
       className=" fixed top-0 left-0 w-full h-full bg-black bg-opacity-80 flex flex-col items-center justify-center"
       style={{ zIndex: 1000 }}
     >
-      <div className="bg-gray-900 p-5 rounded-lg text-white w-[800px] text-center">
+      <div className="bg-gray-900 p-5 rounded-lg text-white w-[900px] text-center">
         <h2 className="text-2xl mb-4">📜 보유 아이템 목록</h2>
 
         {itemsToDisplay.length > 0 ? (
@@ -31,7 +31,7 @@ const ItemList: React.FC<ItemListProps> = ({
               <img
                 src={item.image}
                 alt={item.name}
-                className="w-32 h-32 mr-4"
+                className="w-42 h-32 mr-4"
               />
               <div className="pl-6 mx-auto">
                 <p className="text-xlg">{item.name}</p>

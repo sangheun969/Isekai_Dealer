@@ -26,7 +26,9 @@ export default class StoryScene extends Phaser.Scene {
     this.load.image("master", "/images/main/master3.png");
     this.load.image("table1", "/images/background/table1.png");
     this.load.image("frontmen3", "/images/npc/frontmen3.png");
-    this.load.image("speechBubble", "/images/background/speechBubble5.png");
+    this.load.image("speechBubble9", "/images/background/speechBubble9.png");
+    this.load.image("speechBubble", "/images/background/speechBubble8.png");
+
     this.load.image("speechBubble2", "/images/background/speechBubble6.png");
     this.load.image("gauntletItem", "images/items/gauntletItem1.png");
     this.load.audio("buttonClick", "/audios/Button1.mp3");
@@ -56,10 +58,17 @@ export default class StoryScene extends Phaser.Scene {
     }
 
     this.speechBubble = this.add
-      .image(width / 4.5, height / 3, "speechBubble")
-      .setScale(0.7)
+      .image(width / 3.6, height / 3 - 25, "speechBubble9")
+      .setScale(0.6)
       .setDepth(3)
       .setAlpha(0);
+
+    if (this.speechBubble) {
+      this.speechBubble.setDisplaySize(
+        this.speechBubble.width * 0.6,
+        this.speechBubble.height * 0.3
+      );
+    }
 
     this.speechBubble2 = this.add
       .image(width / 7, height / 7.5, "speechBubble2")
