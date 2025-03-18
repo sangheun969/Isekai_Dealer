@@ -27,7 +27,7 @@ export default class StoryScene extends Phaser.Scene {
     this.load.image("table1", "/images/background/table1.png");
     this.load.image("frontmen3", "/images/npc/frontmen3.png");
     this.load.image("speechBubble9", "/images/background/speechBubble9.png");
-    this.load.image("speechBubble", "/images/background/speechBubble8.png");
+    this.load.image("speechBubble8", "/images/background/speechBubble8.png");
 
     this.load.image("speechBubble2", "/images/background/speechBubble6.png");
     this.load.image("gauntletItem", "images/items/gauntletItem1.png");
@@ -35,12 +35,32 @@ export default class StoryScene extends Phaser.Scene {
   }
 
   create() {
-    const { width, height } = this.scale;
+    this.updateUI();
 
-    this.background = this.add
-      .sprite(0, 0, "pawnShopBackground2")
-      .setDisplaySize(width, height)
-      .setOrigin(0, 0);
+    this.scale.on("resize", () => {
+      this.updateUI();
+    });
+
+    this.displayStoryText(this.storyTextIndex, this.speechBubble!);
+  }
+
+  updateUI() {
+    if (!this.scale || !this.scale.width || !this.scale.height) {
+      console.warn("🚨 this.scale가 아직 초기화되지 않았습니다!");
+      return;
+    }
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const scaleFactor = width / 1920;
+
+    if (this.background) {
+      this.background.setDisplaySize(width, height);
+    } else {
+      this.background = this.add
+        .sprite(0, 0, "pawnShopBackground2")
+        .setOrigin(0, 0)
+        .setDisplaySize(width, height);
+    }
 
     this.add
       .image(width / 2, height, "table1")
@@ -49,11 +69,16 @@ export default class StoryScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
 
     if (this.textures.exists("gauntletItem")) {
-      this.gauntletItemImage = this.add
-        .image(width / 2, height / 1.2, "gauntletItem")
-        .setDisplaySize(300, 300)
+      if (!this.gauntletItemImage) {
+        this.gauntletItemImage = this.add.image(
+          width / 2,
+          height / 1.2,
+          "gauntletItem"
+        );
+      }
+      this.gauntletItemImage
+        .setDisplaySize(300 * scaleFactor, 300 * scaleFactor)
         .setDepth(3)
-        .setOrigin(0.5, 0.5)
         .setAlpha(0);
     }
 
@@ -161,20 +186,10 @@ export default class StoryScene extends Phaser.Scene {
     }
 
     if (currentStory2) {
-      const boxWidth = width * 0.25;
+      const boxWidth = width * 0.2;
       const boxHeight = 90;
-      const boxX = width / 7 - boxWidth / 4;
-      const boxY = speechBubble.y + speechBubble.displayHeight * 0.3;
-
-      this.dialogueBox = this.add.graphics();
-      this.dialogueBox.fillStyle(0xffffff, 1);
-      this.dialogueBox.fillRoundedRect(
-        boxX - 2,
-        boxY - 2,
-        boxWidth + 4,
-        boxHeight,
-        15
-      );
+      const boxX = width / 5;
+      const boxY = height / 1.5 - 100;
 
       if (this.dialogueTextBelow) {
         this.dialogueTextBelow.destroy();
@@ -194,6 +209,17 @@ export default class StoryScene extends Phaser.Scene {
         }
       );
       this.dialogueTextBelow.setOrigin(0.5).setDepth(12);
+
+      // 버튼
+      this.dialogueBox = this.add.graphics();
+      this.dialogueBox.fillStyle(0xffffff, 1);
+      this.dialogueBox.fillRoundedRect(
+        boxX - 2,
+        boxY - 2,
+        boxWidth + 4,
+        boxHeight,
+        15
+      );
 
       this.dialogueBox.setInteractive(
         new Phaser.Geom.Rectangle(boxX, boxY, boxWidth, boxHeight),
@@ -376,7 +402,7 @@ export default class StoryScene extends Phaser.Scene {
     });
     if (!this.speechBubble) {
       this.speechBubble = this.add
-        .image(width / 4, height / 3.5, "speechBubble")
+        .image(width / 4, height / 3.5, "speechBubble8")
         .setScale(0.8)
         .setDepth(10)
         .setAlpha(0);

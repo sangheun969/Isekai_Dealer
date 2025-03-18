@@ -10,10 +10,10 @@ const SetUpBar: React.FC<SetUpBarProps> = ({ onClose, scene }) => {
   const [selectedTab, setSelectedTab] = useState<string>("audio");
   const [bgmVolume, setBgmVolume] = useState<number>(0.5);
   const [effectVolume, setEffectVolume] = useState<number>(0.5);
+  const [resolution, setResolution] = useState<string>("1920x1080");
 
   useEffect(() => {
     scene.input.enabled = false;
-
     return () => {
       scene.input.enabled = true;
     };
@@ -72,6 +72,22 @@ const SetUpBar: React.FC<SetUpBarProps> = ({ onClose, scene }) => {
     }
   };
 
+  const handleResolutionChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const newResolution = event.target.value;
+    setResolution(newResolution);
+
+    const [newWidth, newHeight] = newResolution.split("x").map(Number);
+    scene.scale.resize(newWidth, newHeight);
+
+    const gameContainer = document.getElementById("phaser-game-container");
+    if (gameContainer) {
+      gameContainer.style.width = `${newWidth}px`;
+      gameContainer.style.height = `${newHeight}px`;
+    }
+  };
+
   return (
     <div className="w-full h-[100vh] fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
       <div className="w-full h-full bg-black p-6 rounded-lg shadow-lg">
@@ -101,14 +117,27 @@ const SetUpBar: React.FC<SetUpBarProps> = ({ onClose, scene }) => {
             언어
           </button>
         </div>
-
         <div className="text-white flex flex-col justify-center items-center border h-[70%]">
-          {selectedTab === "video" && <p>비디오 설정</p>}
+          {selectedTab === "video" && (
+            <div className="flex flex-col items-center gap-4">
+              <p>📺 화면 해상도 설정</p>
+              <select
+                value={resolution}
+                onChange={handleResolutionChange}
+                className="text-black px-4 py-2 rounded-md"
+              >
+                <option value="1280x720">1280 x 720 (HD) 🔽</option>
+                <option value="1920x1080">1920 x 1080 (FHD) ✅</option>
+                <option value="2560x1440">2560 x 1440 (QHD)</option>
+              </select>
+            </div>
+          )}
+
           {selectedTab === "audio" && (
             <div className="flex flex-col items-center gap-4">
-              <p>오디오 설정</p>
+              <p>🎵 오디오 설정</p>
               <label className="flex flex-col items-center">
-                🎵 배경음 볼륨: {Math.round(bgmVolume * 100)}%
+                배경음 볼륨: {Math.round(bgmVolume * 100)}%
                 <input
                   type="range"
                   min="0"
@@ -120,7 +149,7 @@ const SetUpBar: React.FC<SetUpBarProps> = ({ onClose, scene }) => {
                 />
               </label>
               <label className="flex flex-col items-center mt-4">
-                🔔 효과음 볼륨: {Math.round(effectVolume * 100)}%
+                효과음 볼륨: {Math.round(effectVolume * 100)}%
                 <input
                   type="range"
                   min="0"
@@ -133,9 +162,13 @@ const SetUpBar: React.FC<SetUpBarProps> = ({ onClose, scene }) => {
               </label>
             </div>
           )}
-          {selectedTab === "language" && <p>언어 설정</p>}
-        </div>
 
+          {selectedTab === "language" && (
+            <div className="flex flex-col items-center gap-4">
+              <p>🌍 언어 설정</p>
+            </div>
+          )}
+        </div>
         <button
           className="bg-gray-800 text-white px-4 py-2 rounded-md w-[150px] mb-4 absolute bottom-5 right-5"
           onClick={() => {

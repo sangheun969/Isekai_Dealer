@@ -1,8 +1,12 @@
 import Phaser from "phaser";
 import GameScene from "./GameScene";
+import React from "react";
+import { createRoot, Root } from "react-dom/client";
 import { saveGameProgress, loadGameProgress } from "../utils/apiService";
+import PetShopModal from "../components/templates/PetShopModal";
 
 export default class Noticeboard extends Phaser.Scene {
+  private petShopModalRoot: Root | null = null;
   constructor() {
     super({ key: "Noticeboard" });
   }
@@ -66,9 +70,9 @@ export default class Noticeboard extends Phaser.Scene {
         ease: "Linear",
       });
     });
-
     boardlist3.on("pointerdown", () => {
-      console.log("boardlist3~");
+      console.log("펫 샵 열기");
+      this.openPetShopModal();
     });
 
     const nextButton = this.add
@@ -115,5 +119,32 @@ export default class Noticeboard extends Phaser.Scene {
         console.warn("⚠️ GameScene을 찾을 수 없습니다.");
       }
     });
+  }
+
+  private openPetShopModal() {
+    if (document.getElementById("pet-shop-modal")) return;
+
+    const modalContainer = document.createElement("div");
+    modalContainer.id = "pet-shop-modal";
+    document.body.appendChild(modalContainer);
+
+    const closePetShop = () => {
+      this.closePetShopModal();
+    };
+
+    if (!this.petShopModalRoot) {
+      this.petShopModalRoot = createRoot(modalContainer);
+    }
+
+    this.petShopModalRoot.render(<PetShopModal onClose={closePetShop} />);
+  }
+
+  private closePetShopModal() {
+    const modalContainer = document.getElementById("pet-shop-modal");
+    if (modalContainer && this.petShopModalRoot) {
+      this.petShopModalRoot.unmount();
+      this.petShopModalRoot = null;
+      document.body.removeChild(modalContainer);
+    }
   }
 }

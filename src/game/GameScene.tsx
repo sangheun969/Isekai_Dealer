@@ -46,6 +46,7 @@ export default class GameScene extends Phaser.Scene {
   private currentClientPersonality: string | null = null;
   private personalityModalRoot: Root | null = null;
   private isPersonalityModalOpen: boolean = false;
+  private currentClientGreedLevel: number = 1;
   private currentItemData: any | null = null;
   private price: number;
   private buttonText5: Phaser.GameObjects.Text | null;
@@ -185,6 +186,7 @@ export default class GameScene extends Phaser.Scene {
   preload() {
     this.load.image("pawnShopBackground3", "/images/background/storeBg5.png");
     this.load.image("table2", "/images/background/table2.png");
+    this.load.image("stand2", "/images/background/stand2.png");
     this.load.image("list1", "/images/background/list1.png");
     this.load.image("list2", "/images/background/list2.png");
     this.load.image("list3", "/images/background/list3.png");
@@ -238,6 +240,13 @@ export default class GameScene extends Phaser.Scene {
       .image(width / 2, height, "table2")
       .setDisplaySize(width, height)
       .setDepth(5)
+      .setOrigin(0.5, 0.5);
+
+    this.add
+      .image(width / 2, height - 90, "stand2")
+      .setDisplaySize(width, height)
+      .setScale(0.6)
+      .setDepth(6)
       .setOrigin(0.5, 0.5);
 
     const hasInventoryItems = this.inventory.length > 0;
@@ -520,6 +529,15 @@ export default class GameScene extends Phaser.Scene {
     this.currentCustomerId = Phaser.Math.Between(1, 8);
     this.currentItemData = Phaser.Math.RND.pick(itemInfo);
     this.currentClientPersonality = Phaser.Math.RND.pick(this.personalities);
+    this.currentClientGreedLevel = this.getRandomGreedLevel(); // ✅ 랜덤 욕심 수치 추가!
+
+    console.log(
+      `🆕 새로운 손님 등장! 성격: ${this.currentClientPersonality}, 욕심 레벨: ${this.currentClientGreedLevel}`
+    );
+
+    this.currentCustomerId = Phaser.Math.Between(1, 8);
+    this.currentItemData = Phaser.Math.RND.pick(itemInfo);
+    this.currentClientPersonality = Phaser.Math.RND.pick(this.personalities);
 
     const customerKey = `client${this.currentCustomerId}`;
     this.customer = this.add.image(width / 2, height + 220, customerKey);
@@ -678,7 +696,7 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     this.currentItem = this.add.image(width / 2, height / 1.2, itemKey);
-    this.currentItem.setScale(0.6).setDepth(6).setOrigin(0.5, 0.5);
+    this.currentItem.setScale(0.7).setDepth(6).setOrigin(0.5, 0.5);
     this.currentItem.setInteractive();
 
     this.selectedItemKey = itemKey;
@@ -1132,6 +1150,10 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  private getRandomGreedLevel(): number {
+    return Phaser.Math.Between(1, 5);
+  }
+
   private showClientPersonality() {
     if (!this.currentClientPersonality || this.isPersonalityModalOpen) return;
 
@@ -1146,7 +1168,10 @@ export default class GameScene extends Phaser.Scene {
     }
 
     this.personalityModalRoot.render(
-      <PersonalityModal personality={this.currentClientPersonality} />
+      <PersonalityModal
+        personality={this.currentClientPersonality}
+        greedLevel={this.currentClientGreedLevel}
+      />
     );
 
     setTimeout(() => {
@@ -1183,6 +1208,8 @@ export default class GameScene extends Phaser.Scene {
       `client${clientNumber}`
     );
     this.customer.setScale(0.7).setDepth(4).setOrigin(0.5, 1);
+
+    this.currentClientGreedLevel = this.getRandomGreedLevel();
 
     const randomItemIndex = Math.floor(Math.random() * this.inventory.length);
     this.selectedItem = this.inventory[randomItemIndex];
