@@ -1,5 +1,5 @@
 import React from "react";
-import { getGameInstance } from "../../App";
+import { getGameInstance } from "../organisms/gameInstance";
 
 interface EndOfDayModalProps {
   purchases: number;

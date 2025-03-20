@@ -6,8 +6,8 @@ import SelectMain from "./game/SelectMain";
 import StoryScene from "./game/StoryScene";
 import GameScene from "./game/GameScene";
 import Noticeboard from "./game/Noticeboard";
-
-let gameInstance: Phaser.Game | null = null;
+import { PetListProvider } from "./utils/PetListContext";
+import { setGameInstance } from "./components/organisms/gameInstance";
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -29,18 +29,22 @@ const App: React.FC = () => {
       },
     };
 
-    gameInstance = new Phaser.Game(config);
+    const game = new Phaser.Game(config);
+    setGameInstance(game);
+    console.log("✅ [App.tsx] setGameInstance() 실행 완료");
+
     return () => {
-      if (gameInstance) {
-        gameInstance.destroy(true);
-        gameInstance = null;
+      if (game) {
+        game.destroy(true);
       }
     };
   }, []);
 
-  return <div id="phaser-game-container" className="w-full h-screen"></div>;
+  return (
+    <PetListProvider>
+      <div id="phaser-game-container" className="w-full h-screen"></div>
+    </PetListProvider>
+  );
 };
-
-export const getGameInstance = (): Phaser.Game | null => gameInstance;
 
 export default App;

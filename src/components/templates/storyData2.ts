@@ -6,7 +6,7 @@ interface StoryData {
 const storyData2: StoryData[] = [
   {
     id: 1,
-    text: "아이구 퇴근이나 해볼까~",
+    text: "이제 퇴근 준비 해야지.",
   },
   {
     id: 2,
@@ -18,7 +18,7 @@ const storyData2: StoryData[] = [
   },
   {
     id: 4,
-    text: "영화에서 본거 같은..",
+    text: "영화에서 본 것 같은..",
   },
   {
     id: 5,
@@ -26,7 +26,7 @@ const storyData2: StoryData[] = [
   },
   {
     id: 6,
-    text: "쉬원쉬원 하시네요",
+    text: "깔끔하네요",
   },
   {
     id: 7,
@@ -54,7 +54,7 @@ const storyData2: StoryData[] = [
   },
   {
     id: 13,
-    text: "착용하지 말라고 하면...착용하고 싶어지잖아..",
+    text: "착용하지 말라고 하면...착용하고 싶어지는데..",
   },
   {
     id: 14,

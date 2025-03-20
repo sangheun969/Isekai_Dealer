@@ -11,13 +11,14 @@ import EndOfDayModal from "../components/templates/EndOfDayModalProps";
 
 import ItemPurchaseModal from "../components/organisms/ItemPurchaseModal";
 import PersonalityModal from "../components/templates/PersonalityModal";
-
+import PetListModal from "../components/templates/PetListModal";
 import {
   getMinAcceptablePrice,
   getResponseText,
   getMinPurchasePrice,
   getPurchaseResponseText,
 } from "../components/templates/priceEvaluation";
+import { getGameInstance } from "../components/organisms/gameInstance";
 
 export default class GameScene extends Phaser.Scene {
   private background: Phaser.GameObjects.Image | null = null;
@@ -38,7 +39,7 @@ export default class GameScene extends Phaser.Scene {
   private isSetupBarOpen: boolean = false;
   private suggestedPrice: number = 0;
   private itemDisplayGroup: Phaser.GameObjects.Group | null = null;
-  private catImage: Phaser.GameObjects.Image | null = null;
+  private petImage!: Phaser.GameObjects.Image;
   private isCatImageToggled: boolean = false;
   private itemListRoot: Root | null = null;
   private setupBarRoot: Root | null = null;
@@ -68,6 +69,15 @@ export default class GameScene extends Phaser.Scene {
   private todayPurchaseCount: number = 0;
   private todaySalesCount: number = 0;
   private dailyClientText: Phaser.GameObjects.Text | null = null;
+  // private petList: { id: number; name: string; image: string }[] = [];
+  private petListRoot: Root | null = null;
+  private modalOpen: boolean = false;
+  private petList: { id: number; name: string; image: string }[] = [
+    { id: 0, name: "기본 고양이", image: "cat1" },
+  ];
+
+  private selectedPet: { id: number; name: string; image: string } | null =
+    null;
 
   private inventory: any[] = [];
 
@@ -144,10 +154,7 @@ export default class GameScene extends Phaser.Scene {
 
   public registerReactContext(reactComponent: React.Component) {
     this.reactContext = reactComponent;
-    console.log("🔄 React Context 등록됨!");
-
     this.setModalState = (isOpen: boolean, item?: any, price?: number) => {
-      console.log("🔄 setModalState 호출됨!", isOpen, item, price);
       if (this.reactContext) {
         this.reactContext.setState({
           isModalOpen: isOpen,
@@ -167,7 +174,6 @@ export default class GameScene extends Phaser.Scene {
 
   init(data: { savedData?: { money: number; items: any[]; customer?: any } }) {
     if (data.savedData) {
-      console.log("📥 불러온 데이터 적용:", data.savedData);
       this.money = data.savedData.money;
       this.inventory = data.savedData.items;
 
@@ -187,35 +193,39 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("pawnShopBackground3", "/images/background/storeBg5.png");
     this.load.image("table2", "/images/background/table2.png");
     this.load.image("stand2", "/images/background/stand2.png");
-    this.load.image("list1", "/images/background/list1.png");
-    this.load.image("list2", "/images/background/list2.png");
-    this.load.image("list3", "/images/background/list3.png");
     this.load.image("list4", "/images/background/list4.png");
+    this.load.image("petList", "/images/background/animalList.png");
     this.load.image("speechBubble9", "/images/background/speechBubble9.png");
     this.load.image("speechBubble6", "/images/background/speechBubble6.png");
     this.load.image("speechBubble8", "/images/background/speechBubble8.png");
     this.load.image("coin", "/images/background/myCoin.png");
     this.load.audio("buttonClick", "/audios/Button1.mp3");
     this.load.image("cat1", "/images/main/cat1.png");
-    this.load.image("cat2", "/images/main/cat2.png");
     this.load.image("reinputIcon", "/images/icon/icon1.png");
     this.load.image("amountPaid1", "/images/items/moneyCoin2.png");
     this.load.image("amountPaid2", "/images/items/moneyCoin4.png");
     this.load.image("reinputPrice", "/images/background/reinputPrice.png");
     this.load.image("statsImg2", "/images/background/statsImg2.png");
-
+    this.cameras.main.setBackgroundColor("#000000");
     for (let i = 1; i <= 16; i++) {
       this.load.image(`client${i}`, `/images/npc/client${i}.png`);
     }
   }
 
   async create() {
+    if (!this.cameras || !this.cameras.main) {
+      console.error("🚨 [GameScene] this.cameras.main이 없습니다!");
+      return;
+    }
+
+    const { width, height } = this.scale;
+    console.log(
+      `📏 [GameScene] 초기화된 화면 크기: width: ${width}, height: ${height}`
+    );
     try {
       const gameData = await loadGameProgress();
 
       if (gameData) {
-        console.log("✅ 게임 데이터 로드 성공:", gameData);
-
         this.money = gameData.money;
         this.inventory = gameData.items;
         this.currentCustomerId = gameData.customerData?.customerId || null;
@@ -229,7 +239,14 @@ export default class GameScene extends Phaser.Scene {
       console.error("❌ 게임 데이터 불러오기 실패:", error);
     }
 
-    const { width, height } = this.scale;
+    const gameScene = getGameInstance();
+    if (gameScene) {
+      console.log(
+        "🎯 [PetShopModal] GameScene 활성 상태:",
+        gameScene.scene.isActive()
+      );
+    }
+
     this.choiceButtonGroup = this.add.group();
 
     this.background = this.add
@@ -281,6 +298,14 @@ export default class GameScene extends Phaser.Scene {
         await saveGameProgress(this.money, this.inventory);
       });
 
+    const petListButton = this.add.image(width - 40, 150, "petList");
+    petListButton.setScale(0.2).setDepth(6).setOrigin(1, 0);
+    petListButton.setInteractive();
+    petListButton.on("pointerdown", () => {
+      console.log("🐾 PetListModal 열기!");
+      this.showPetListModal();
+    });
+
     this.dailyClientText = this.add
       .text(width - 140, 90, `${this.dailyClientCount}명/8`, {
         fontSize: "28px",
@@ -298,20 +323,51 @@ export default class GameScene extends Phaser.Scene {
     });
     this.input.keyboard?.on("keydown-ESC", this.openSetupBar, this);
 
-    this.catImage = this.add
-      .image(width - 150, height - 100, "cat1")
+    this.selectedPet = {
+      id: 0,
+      name: "기본 고양이",
+      image: "cat1",
+    };
+
+    this.petImage = this.add
+      .image(width - 150, height - 100, this.selectedPet.image)
       .setScale(0.3)
       .setDepth(10)
       .setInteractive();
 
-    this.catImage.on("pointerdown", () => {
-      this.toggleCatImage();
-    });
+    this.petImage.on("pointerdown", () => this.toggleCatImage());
+
+    this.events.on("setSelectedPet", this.setSelectedPet, this);
 
     this.scene.launch("ClientPurchaseScene", {
       inventory: this.inventory,
       money: this.money,
       openModal: this.setModalState,
+    });
+
+    this.events.on("getPlayerMoney", (callback: (money: number) => void) => {
+      console.log("📢 [GameScene] getPlayerMoney 이벤트가 실행됨!");
+      console.log("💰 [GameScene] 현재 자산:", this.money);
+      callback(this.money);
+    });
+
+    this.events.on("updatePlayerMoney", async (newMoney) => {
+      this.money = newMoney;
+
+      if (this.moneyText) {
+        this.moneyText.setText(`💰 ${this.money.toLocaleString()} 코인`);
+      }
+
+      console.log("💾 [GameScene] 업데이트된 자산 저장:", this.money);
+
+      await saveGameProgress(this.money, this.inventory, {
+        customerId: this.currentCustomerId,
+        personality: this.currentClientPersonality,
+        item: this.currentItemData,
+      });
+    });
+    this.events.on("addNewPet", (pet) => {
+      this.addPet(pet);
     });
   }
 
@@ -336,6 +392,12 @@ export default class GameScene extends Phaser.Scene {
   }
 
   public cleanupUI() {
+    if (this.choiceButtonGroup) {
+      this.choiceButtonGroup.clear(true, true);
+    } else {
+      console.warn("⚠️ [cleanupUI] choiceButtonGroup이 존재하지 않음.");
+    }
+
     if (this.currentItem) {
       this.currentItem.destroy();
       this.currentItem = null;
@@ -355,12 +417,6 @@ export default class GameScene extends Phaser.Scene {
     if (this.speechText) {
       this.speechText.destroy();
       this.speechText = null;
-    }
-
-    if (this.choiceButtonGroup) {
-      this.choiceButtonGroup.clear(true, true);
-      this.choiceButtonGroup.destroy();
-      this.choiceButtonGroup = this.add.group();
     }
   }
 
@@ -529,15 +585,7 @@ export default class GameScene extends Phaser.Scene {
     this.currentCustomerId = Phaser.Math.Between(1, 8);
     this.currentItemData = Phaser.Math.RND.pick(itemInfo);
     this.currentClientPersonality = Phaser.Math.RND.pick(this.personalities);
-    this.currentClientGreedLevel = this.getRandomGreedLevel(); // ✅ 랜덤 욕심 수치 추가!
-
-    console.log(
-      `🆕 새로운 손님 등장! 성격: ${this.currentClientPersonality}, 욕심 레벨: ${this.currentClientGreedLevel}`
-    );
-
-    this.currentCustomerId = Phaser.Math.Between(1, 8);
-    this.currentItemData = Phaser.Math.RND.pick(itemInfo);
-    this.currentClientPersonality = Phaser.Math.RND.pick(this.personalities);
+    this.currentClientGreedLevel = this.getRandomGreedLevel();
 
     const customerKey = `client${this.currentCustomerId}`;
     this.customer = this.add.image(width / 2, height + 220, customerKey);
@@ -864,8 +912,6 @@ export default class GameScene extends Phaser.Scene {
                 .setInteractive();
 
               reinputButton.on("pointerdown", () => {
-                console.log("🔄 재입력 버튼 클릭됨!");
-
                 buttonImage5.destroy();
                 buttonText5.destroy();
                 reinputButton.setVisible(false);
@@ -1139,9 +1185,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   private toggleCatImage() {
-    if (!this.catImage) return;
-    this.isCatImageToggled = !this.isCatImageToggled;
-    this.catImage.setTexture(this.isCatImageToggled ? "cat2" : "cat1");
+    if (!this.petImage) return;
 
     if (this.isPersonalityModalOpen) {
       this.closePersonalityModal();
@@ -1733,5 +1777,52 @@ export default class GameScene extends Phaser.Scene {
     this.todaySalesAmount = 0;
     this.todayPurchaseCount = 0;
     this.todaySalesCount = 0;
+  }
+
+  private showPetListModal() {
+    if (this.modalOpen) return;
+    this.modalOpen = true;
+    this.input.enabled = false;
+
+    if (document.getElementById("pet-list-modal")) return;
+
+    const modalContainer = document.createElement("div");
+    modalContainer.id = "pet-list-modal";
+    document.body.appendChild(modalContainer);
+
+    const closePetList = () => {
+      if (this.petListRoot) {
+        this.petListRoot.unmount();
+        this.petListRoot = null;
+      }
+      document.body.removeChild(modalContainer);
+      this.modalOpen = false;
+      this.input.enabled = true;
+    };
+
+    if (!this.petListRoot) {
+      this.petListRoot = createRoot(modalContainer);
+    }
+
+    this.petListRoot.render(
+      <PetListModal pets={[]} itemsPerPage={3} onClose={closePetList} />
+    );
+  }
+
+  public addPet(pet: { id: number; name: string; image: string }) {
+    if (!this.petList.some((p) => p.id === pet.id)) {
+      this.petList.push(pet);
+      localStorage.setItem("ownedPets", JSON.stringify(this.petList));
+      console.log("🐾 펫이 추가됨:", pet.name);
+    }
+  }
+
+  public getPetList() {
+    return this.petList;
+  }
+  public setSelectedPet(pet: { id: number; name: string; image: string }) {
+    if (!this.petImage || !this.textures.exists(pet.image)) return;
+    this.selectedPet = pet;
+    this.petImage.setTexture(pet.image);
   }
 }

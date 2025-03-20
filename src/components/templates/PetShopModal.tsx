@@ -1,10 +1,20 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { getGameInstance } from "../organisms/gameInstance";
+
+interface Pet {
+  id: number;
+  name: string;
+  image: string;
+  price: number;
+}
 
 interface PetShopModalProps {
   onClose: () => void;
+  onPurchase?: (pet: Pet) => void;
 }
 
 const PetShopModal: React.FC<PetShopModalProps> = ({ onClose }) => {
+  const [money, setMoney] = useState<number | null>(null);
   const pets = [
     {
       id: 1,
@@ -19,11 +29,28 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose }) => {
       price: 7000,
     },
   ];
+  useEffect(() => {
+    const gameScene = getGameInstance();
+
+    if (gameScene) {
+      gameScene.events.emit("getPlayerMoney", (currentMoney: number) => {
+        setMoney(currentMoney);
+      });
+    } else {
+      console.warn("❌ [PetShopModal] GameScene을 찾을 수 없습니다.");
+    }
+  }, []);
+
+  console.log("📌 [PetShopModal] 현재 보유 금액 업데이트:", money);
 
   return (
     <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg w-[400px]">
         <h2 className="text-2xl font-bold mb-4">🐾 펫 상점</h2>
+
+        <p className="text-lg font-semibold mb-4">
+          {money !== null ? `${money.toLocaleString()} 코인` : "로딩 중..."}
+        </p>
         <div className="flex flex-col gap-4">
           {pets.map((pet) => (
             <div

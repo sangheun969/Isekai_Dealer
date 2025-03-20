@@ -4,9 +4,14 @@ import React from "react";
 import { createRoot, Root } from "react-dom/client";
 import { saveGameProgress, loadGameProgress } from "../utils/apiService";
 import PetShopModal from "../components/templates/PetShopModal";
+import { PetListProvider } from "../utils/PetListContext";
 
 export default class Noticeboard extends Phaser.Scene {
   private petShopModalRoot: Root | null = null;
+  private ownedPets: { id: number; name: string; image: string }[] = [
+    { id: 0, name: "기본 고양이", image: "/images/main/cat1.png" },
+  ];
+
   constructor() {
     super({ key: "Noticeboard" });
   }
@@ -28,7 +33,6 @@ export default class Noticeboard extends Phaser.Scene {
 
     boardlist2.setScale(0.4).setDepth(6).setOrigin(0.5, 0.5);
     boardlist2.setInteractive();
-
     boardlist2.on("pointerover", () => {
       this.tweens.add({
         targets: boardlist2,
@@ -37,7 +41,6 @@ export default class Noticeboard extends Phaser.Scene {
         ease: "Linear",
       });
     });
-
     boardlist2.on("pointerout", () => {
       this.tweens.add({
         targets: boardlist2,
@@ -46,13 +49,12 @@ export default class Noticeboard extends Phaser.Scene {
         ease: "Linear",
       });
     });
-
     boardlist2.on("pointerdown", () => {
-      console.log("boardlist2~");
+      console.log("부동산 목록록");
     });
+
     boardlist3.setScale(0.4).setDepth(6).setOrigin(0.5, 0.5);
     boardlist3.setInteractive();
-
     boardlist3.on("pointerover", () => {
       this.tweens.add({
         targets: boardlist3,
@@ -61,7 +63,6 @@ export default class Noticeboard extends Phaser.Scene {
         ease: "Linear",
       });
     });
-
     boardlist3.on("pointerout", () => {
       this.tweens.add({
         targets: boardlist3,
@@ -89,6 +90,7 @@ export default class Noticeboard extends Phaser.Scene {
     nextButton.on("pointerover", () => {
       nextButton.setStyle({ backgroundColor: "#0056b3" });
     });
+
     nextButton.on("pointerdown", async () => {
       this.scene.stop("Noticeboard");
 
@@ -103,7 +105,6 @@ export default class Noticeboard extends Phaser.Scene {
 
         gameScene.cleanupUI();
         gameScene.cleanupBuyerUI();
-
         gameScene.setDailyClientCount(0);
         gameScene.resetCustomerData();
         const hasInventoryItems = gameScene.getInventory().length > 0;
@@ -119,6 +120,8 @@ export default class Noticeboard extends Phaser.Scene {
         console.warn("⚠️ GameScene을 찾을 수 없습니다.");
       }
     });
+
+    this.loadOwnedPets();
   }
 
   private openPetShopModal() {
@@ -132,11 +135,23 @@ export default class Noticeboard extends Phaser.Scene {
       this.closePetShopModal();
     };
 
+    const purchasePet = (pet: { id: number; name: string; image: string }) => {
+      const gameScene = this.scene.get("GameScene") as GameScene;
+      if (gameScene) {
+        gameScene.addPet(pet);
+        console.log(`🐾 [Noticeboard] ${pet.name}을(를) 게임에 추가`);
+      }
+    };
+
     if (!this.petShopModalRoot) {
       this.petShopModalRoot = createRoot(modalContainer);
     }
 
-    this.petShopModalRoot.render(<PetShopModal onClose={closePetShop} />);
+    this.petShopModalRoot.render(
+      <PetListProvider>
+        <PetShopModal onClose={closePetShop} onPurchase={purchasePet} />
+      </PetListProvider>
+    );
   }
 
   private closePetShopModal() {
@@ -145,6 +160,13 @@ export default class Noticeboard extends Phaser.Scene {
       this.petShopModalRoot.unmount();
       this.petShopModalRoot = null;
       document.body.removeChild(modalContainer);
+    }
+  }
+
+  private loadOwnedPets() {
+    const storedPets = localStorage.getItem("ownedPets");
+    if (storedPets) {
+      this.ownedPets = JSON.parse(storedPets);
     }
   }
 }
