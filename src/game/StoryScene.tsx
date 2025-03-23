@@ -35,18 +35,26 @@ export default class StoryScene extends Phaser.Scene {
   }
 
   create() {
-    this.updateUI();
+    if (!this.scale) {
+      console.warn("🚨 [StoryScene] this.scale가 아직 준비되지 않음!");
+      return;
+    }
 
     this.scale.on("resize", () => {
       this.updateUI();
     });
+    this.updateUI();
 
     this.displayStoryText(this.storyTextIndex, this.speechBubble!);
   }
 
   updateUI() {
-    if (!this.scale || !this.scale.width || !this.scale.height) {
-      console.warn("🚨 this.scale가 아직 초기화되지 않았습니다!");
+    if (
+      !this.scale ||
+      typeof this.scale.width === "undefined" ||
+      typeof this.scale.height === "undefined"
+    ) {
+      console.warn("🚨 [updateUI] this.scale가 아직 초기화되지 않았습니다!");
       return;
     }
     const width = this.scale.width;
@@ -109,7 +117,21 @@ export default class StoryScene extends Phaser.Scene {
     this.displayStoryText(this.storyTextIndex, this.speechBubble);
   }
 
-  displayStoryText(index: number, speechBubble: Phaser.GameObjects.Image) {
+  displayStoryText(
+    index: number,
+    speechBubble: Phaser.GameObjects.Image | null
+  ) {
+    if (!speechBubble) {
+      console.warn(
+        "🚨 [StoryScene] speechBubble이 존재하지 않아 스토리 텍스트를 표시할 수 없음!"
+      );
+      return;
+    }
+
+    if (!this.cameras || !this.cameras.main) {
+      console.warn("🚨 [StoryScene] cameras.main이 초기화되지 않음!");
+      return;
+    }
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
@@ -286,9 +308,16 @@ export default class StoryScene extends Phaser.Scene {
   }
 
   advanceStory(speechBubble: Phaser.GameObjects.Image) {
+    if (!speechBubble) {
+      console.warn(
+        "🚨 [StoryScene] speechBubble이 존재하지 않아 스토리 진행 불가!"
+      );
+      return;
+    }
     const currentStory = this.storyData[this.storyTextIndex];
 
     if (this.storyTextIndex >= this.storyData.length - 1) {
+      this.scene.sleep("StoryScene");
       this.scene.start("GameScene");
       return;
     }
@@ -360,9 +389,7 @@ export default class StoryScene extends Phaser.Scene {
           ease: "Sine.easeInOut",
         });
       }
-      if (this.speechBubble) {
-        this.speechBubble.setAlpha(0);
-      }
+      this.speechBubble?.setAlpha(0);
 
       return;
     }

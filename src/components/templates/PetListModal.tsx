@@ -20,12 +20,20 @@ const PetListModal: React.FC<PetListModalProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedPetId, setSelectedPetId] = useState<number>(0);
+  const [ownedPets, setOwnedPets] = useState<Pet[]>([]);
 
   const defaultPet: Pet = {
     id: 0,
     name: "기본 고양이",
     image: "/images/main/cat1.png",
   };
+
+  useEffect(() => {
+    const storedPets = localStorage.getItem("ownedPets");
+    if (storedPets) {
+      setOwnedPets(JSON.parse(storedPets));
+    }
+  }, []);
 
   const allPets = [defaultPet, ...pets];
   const startIndex = currentPage * itemsPerPage;

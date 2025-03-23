@@ -70,16 +70,25 @@ export default class GameScene extends Phaser.Scene {
   private todaySalesCount: number = 0;
   private dailyClientText: Phaser.GameObjects.Text | null = null;
   // private petList: { id: number; name: string; image: string }[] = [];
-  private petListRoot: Root | null = null;
   private modalOpen: boolean = false;
-  private petList: { id: number; name: string; image: string }[] = [
-    { id: 0, name: "기본 고양이", image: "cat1" },
-  ];
+  private petListRoot: Root | null = null;
 
-  private selectedPet: { id: number; name: string; image: string } | null =
-    null;
+  private tableImage!: Phaser.GameObjects.Image;
+  private standImage!: Phaser.GameObjects.Image;
+  private saveText!: Phaser.GameObjects.Text;
+
+  private client!: Phaser.GameObjects.Sprite | null;
+  private speechBubble8!: Phaser.GameObjects.Image | null;
+  private speechBubble9!: Phaser.GameObjects.Image | null;
+
+  private petList: { id: number; name: string; image: string }[] = [];
+  private petListButton: Phaser.GameObjects.Image | null = null;
+  private selectedPet: { id: number; name: string; image: string } =
+    this.petList[0];
 
   private inventory: any[] = [];
+
+  private list1: Phaser.GameObjects.Image | null = null;
 
   private personalities: string[] = [
     "호구",
@@ -126,8 +135,7 @@ export default class GameScene extends Phaser.Scene {
 
   async saveGameState() {
     try {
-      await saveGameProgress(this.money, this.inventory, {
-        customerId: this.currentCustomerId,
+      await saveGameProgress(this.money, this.inventory, this.petList, {
         personality: this.currentClientPersonality,
         item: this.currentItemData,
       });
@@ -139,7 +147,6 @@ export default class GameScene extends Phaser.Scene {
       console.error("❌ 게임 데이터 저장 실패:", error);
     }
   }
-
   private handleNewSuggestedPrice(newSuggestedPrice: number) {
     this.price = newSuggestedPrice;
 
@@ -170,6 +177,22 @@ export default class GameScene extends Phaser.Scene {
   private someLogicToCalculateNewPrice(): number {
     const calculatedPrice = Math.floor(this.suggestedPrice * 0.9);
     return calculatedPrice;
+  }
+
+  public setGameData(money: number, inventory: any[], petList: any[]) {
+    console.log("🔄 [GameScene] 게임 데이터 설정 중...");
+
+    this.money = money;
+    this.inventory = inventory;
+    this.petList = petList || [];
+
+    console.log("✅ [GameScene] 게임 데이터 설정 완료:", {
+      money: this.money,
+      inventory: this.inventory,
+      petList: this.petList,
+    });
+
+    this.updateUI(); // 🔄 UI 갱신
   }
 
   init(data: { savedData?: { money: number; items: any[]; customer?: any } }) {
@@ -213,18 +236,13 @@ export default class GameScene extends Phaser.Scene {
   }
 
   async create() {
-    if (!this.cameras || !this.cameras.main) {
-      console.error("🚨 [GameScene] this.cameras.main이 없습니다!");
-      return;
+    const storyScene = this.scene.get("StoryScene") as Phaser.Scene | undefined;
+    if (storyScene && storyScene.scene.isActive()) {
+      this.scene.stop("StoryScene");
     }
 
-    const { width, height } = this.scale;
-    console.log(
-      `📏 [GameScene] 초기화된 화면 크기: width: ${width}, height: ${height}`
-    );
     try {
       const gameData = await loadGameProgress();
-
       if (gameData) {
         this.money = gameData.money;
         this.inventory = gameData.items;
@@ -239,42 +257,157 @@ export default class GameScene extends Phaser.Scene {
       console.error("❌ 게임 데이터 불러오기 실패:", error);
     }
 
-    const gameScene = getGameInstance();
-    if (gameScene) {
-      console.log(
-        "🎯 [PetShopModal] GameScene 활성 상태:",
-        gameScene.scene.isActive()
-      );
-    }
-
     this.choiceButtonGroup = this.add.group();
+    this.itemDisplayGroup = this.add.group();
 
-    this.background = this.add
-      .sprite(0, 0, "pawnShopBackground3")
-      .setDisplaySize(width, height)
-      .setOrigin(0, 0);
-    this.add
-      .image(width / 2, height, "table2")
-      .setDisplaySize(width, height)
-      .setDepth(5)
-      .setOrigin(0.5, 0.5);
-
-    this.add
-      .image(width / 2, height - 90, "stand2")
-      .setDisplaySize(width, height)
-      .setScale(0.6)
-      .setDepth(6)
-      .setOrigin(0.5, 0.5);
+    this.updateUI();
 
     const hasInventoryItems = this.inventory.length > 0;
-
     if (hasInventoryItems && Math.random() < 0.4) {
       this.spawnBuyer();
     } else {
       this.spawnRandomCustomer();
     }
 
-    this.itemDisplayGroup = this.add.group();
+    this.input.keyboard?.on("keydown-ESC", this.openSetupBar, this);
+
+    this.events.on("getPlayerMoney", (callback: (money: number) => void) => {
+      callback(this.money);
+    });
+
+    this.events.on("updatePlayerMoney", async (newMoney) => {
+      this.money = newMoney;
+      this.moneyText?.setText(`💰 ${this.money.toLocaleString()} 코인`);
+
+      console.log("💾 [GameScene] 업데이트된 자산 저장:", this.money);
+
+      await saveGameProgress(this.money, this.inventory, this.petList, {
+        customerId: this.currentCustomerId,
+        personality: this.currentClientPersonality,
+        item: this.currentItemData,
+      });
+    });
+
+    this.events.on("addNewPet", (pet) => {
+      this.addPet(pet);
+    });
+  }
+
+  public createMoneyText() {
+    this.moneyText = this.add.text(
+      50,
+      50,
+      `💰 ${this.money.toLocaleString()} 코인`,
+      {
+        fontSize: "32px",
+        color: "#ffffff",
+      }
+    );
+  }
+
+  public createDailyClientText() {
+    this.dailyClientText = this.add.text(
+      200,
+      50,
+      `${this.dailyClientCount}명/8`,
+      {
+        fontSize: "32px",
+        color: "#ffffff",
+      }
+    );
+  }
+
+  public updateUI() {
+    if (!this.cameras || !this.cameras.main) {
+      console.warn("🚨 [GameScene] cameras.main이 없어서 새로 추가합니다.");
+      this.cameras.main = this.cameras.add(0, 0, 1920, 1080);
+    }
+
+    console.log(
+      "🔄 [GameScene] updateUI 실행. 현재 화면 크기:",
+      this.scale.width,
+      this.scale.height
+    );
+
+    if (!this.moneyText || !this.moneyText.active || !this.moneyText.setText) {
+      console.warn(
+        "⚠️ moneyText가 존재하지 않거나 destroy됨. UI를 다시 생성합니다."
+      );
+      this.createMoneyText();
+    }
+    this.moneyText?.setText(`💰 ${this.money.toLocaleString()} 코인`);
+
+    if (!this.dailyClientText || this.dailyClientText) {
+      console.warn(
+        "⚠️ dailyClientText가 존재하지 않거나 destroy됨. UI를 다시 생성합니다."
+      );
+      this.createDailyClientText();
+    }
+    this.dailyClientText?.setText(`${this.dailyClientCount}명/8`);
+
+    if (this.petList.length > 0) {
+      console.log("🐾 펫 리스트 복구:", this.petList);
+      this.selectedPet = this.petList[0];
+    } else {
+      console.warn("⚠️ 보유한 펫이 없음.");
+      this.selectedPet = { id: 0, name: "기본 고양이", image: "cat1" };
+    }
+
+    if (this.petImage && this.selectedPet?.image) {
+      this.petImage.setTexture(this.selectedPet.image);
+    } else {
+      console.warn(
+        "❌ petImage 또는 selectedPet.image가 존재하지 않습니다!",
+        this.petImage,
+        this.selectedPet
+      );
+    }
+
+    if (!this.petImage) {
+      this.petImage = this.add.image(100, 100, "defaultPet");
+    }
+
+    if (!this.selectedPet || !this.selectedPet.image) {
+      this.selectedPet = { id: 0, name: "기본 고양이", image: "cat1" };
+    }
+
+    if (!this.textures.exists(this.selectedPet.image)) {
+      this.selectedPet.image = "cat1";
+    }
+    const { width, height } = this.scale;
+
+    this.background = this.add
+      .image(0, 0, "pawnShopBackground3")
+      .setOrigin(0, 0)
+      .setDisplaySize(width, height);
+
+    this.tableImage = this.add
+      .image(width / 2, height, "table2")
+      .setDisplaySize(width, height)
+      .setDepth(5)
+      .setOrigin(0.5, 0.5);
+
+    this.standImage = this.add
+      .image(width / 2, height - 90, "stand2")
+      .setDisplaySize(width, height)
+      .setScale(0.6)
+      .setDepth(6)
+      .setOrigin(0.5, 0.5);
+
+    this.saveText = this.add
+      .text(width - 10, 90, "💾 저장", {
+        fontSize: "32px",
+        color: "#fff",
+        padding: { left: 10, right: 10, top: 5, bottom: 5 },
+      })
+      .setInteractive()
+      .setDepth(10)
+      .setOrigin(1, 0)
+      .on("pointerdown", async () => {
+        console.log("💾 게임 데이터 저장 중...");
+        await saveGameProgress(this.money, this.inventory, this.petList);
+        console.log("✅ 게임 저장 완료!");
+      });
 
     this.moneyText = this.add
       .text(width - 10, 50, `💰 ${this.money.toLocaleString()} 코인`, {
@@ -285,27 +418,6 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(10)
       .setOrigin(1, 0);
 
-    this.add
-      .text(width - 10, 90, "💾 저장", {
-        fontSize: "32px",
-        color: "#fff",
-        padding: { left: 10, right: 10, top: 5, bottom: 5 },
-      })
-      .setInteractive()
-      .setDepth(10)
-      .setOrigin(1, 0)
-      .on("pointerdown", async () => {
-        await saveGameProgress(this.money, this.inventory);
-      });
-
-    const petListButton = this.add.image(width - 40, 150, "petList");
-    petListButton.setScale(0.2).setDepth(6).setOrigin(1, 0);
-    petListButton.setInteractive();
-    petListButton.on("pointerdown", () => {
-      console.log("🐾 PetListModal 열기!");
-      this.showPetListModal();
-    });
-
     this.dailyClientText = this.add
       .text(width - 140, 90, `${this.dailyClientCount}명/8`, {
         fontSize: "28px",
@@ -315,19 +427,36 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(10)
       .setOrigin(1, 0);
 
-    const list1 = this.add.image(width * 0.1, height * 0.85, "list4");
-    list1.setScale(0.5).setDepth(6).setOrigin(0.3, 0.5);
-    list1.setInteractive();
-    list1.on("pointerdown", () => {
+    this.petListButton = this.add
+      .image(width - 40, 150, "petList")
+      .setScale(0.2)
+      .setDepth(6)
+      .setOrigin(1, 0)
+      .setInteractive();
+
+    this.petListButton.on("pointerdown", () => {
+      console.log("🐾 PetListModal 열기!");
+      this.showPetListModal();
+    });
+
+    this.list1 = this.add
+      .image(width * 0.1, height * 0.85, "list4")
+      .setScale(0.5)
+      .setDepth(6)
+      .setOrigin(0.3, 0.5)
+      .setInteractive();
+
+    this.list1.on("pointerdown", () => {
       this.openItemList();
     });
-    this.input.keyboard?.on("keydown-ESC", this.openSetupBar, this);
 
-    this.selectedPet = {
-      id: 0,
-      name: "기본 고양이",
-      image: "cat1",
-    };
+    if (!this.selectedPet) {
+      this.selectedPet = {
+        id: 0,
+        name: "기본 고양이",
+        image: "cat1",
+      };
+    }
 
     this.petImage = this.add
       .image(width - 150, height - 100, this.selectedPet.image)
@@ -336,86 +465,74 @@ export default class GameScene extends Phaser.Scene {
       .setInteractive();
 
     this.petImage.on("pointerdown", () => this.toggleCatImage());
-
-    this.events.on("setSelectedPet", this.setSelectedPet, this);
-
-    this.scene.launch("ClientPurchaseScene", {
-      inventory: this.inventory,
-      money: this.money,
-      openModal: this.setModalState,
-    });
-
-    this.events.on("getPlayerMoney", (callback: (money: number) => void) => {
-      console.log("📢 [GameScene] getPlayerMoney 이벤트가 실행됨!");
-      console.log("💰 [GameScene] 현재 자산:", this.money);
-      callback(this.money);
-    });
-
-    this.events.on("updatePlayerMoney", async (newMoney) => {
-      this.money = newMoney;
-
-      if (this.moneyText) {
-        this.moneyText.setText(`💰 ${this.money.toLocaleString()} 코인`);
-      }
-
-      console.log("💾 [GameScene] 업데이트된 자산 저장:", this.money);
-
-      await saveGameProgress(this.money, this.inventory, {
-        customerId: this.currentCustomerId,
-        personality: this.currentClientPersonality,
-        item: this.currentItemData,
-      });
-    });
-    this.events.on("addNewPet", (pet) => {
-      this.addPet(pet);
-    });
   }
 
   private incrementDailyClientCount() {
     this.dailyClientCount++;
 
-    if (this.dailyClientText) {
-      this.dailyClientText.setText(` ${this.dailyClientCount}명/8`);
-    } else {
-      console.warn(
-        "⚠️ dailyClientText가 존재하지 않아 업데이트할 수 없습니다."
-      );
-    }
+    this.dailyClientCount++;
 
     if (this.dailyClientCount > 8) {
+      this.dailyClientCount = 1;
       this.showEndOfDayModal();
     }
 
     if (this.dailyClientText) {
       this.dailyClientText.setText(`${this.dailyClientCount}명/8`);
+    } else {
+      console.warn(
+        "⚠️ dailyClientText가 존재하지 않아 업데이트할 수 없습니다."
+      );
     }
   }
 
   public cleanupUI() {
+    if (!this.choiceButtonGroup) {
+      console.warn("⚠️ [cleanupUI] choiceButtonGroup이 없음. 새로 생성합니다.");
+      this.choiceButtonGroup = this.add.group();
+      return;
+    }
+
     if (this.choiceButtonGroup) {
-      this.choiceButtonGroup.clear(true, true);
-    } else {
-      console.warn("⚠️ [cleanupUI] choiceButtonGroup이 존재하지 않음.");
+      const children = this.choiceButtonGroup.getChildren();
+      if (Array.isArray(children) && children.length > 0) {
+        children.forEach((child) => {
+          if (
+            child instanceof Phaser.GameObjects.Image ||
+            child instanceof Phaser.GameObjects.Text
+          ) {
+            child.setAlpha(0);
+          }
+        });
+
+        if (this.choiceButtonGroup.clear) {
+          this.choiceButtonGroup.clear(true, true);
+        }
+      }
+    }
+
+    if (this.choiceButtonGroup) {
+      this.choiceButtonGroup.setVisible(false);
     }
 
     if (this.currentItem) {
-      this.currentItem.destroy();
+      this.currentItem.setAlpha(0);
       this.currentItem = null;
     }
     this.selectedItemKey = null;
 
     if (this.customer) {
-      this.customer.destroy();
+      this.customer.setAlpha(0);
       this.customer = null;
     }
 
     if (this.speechBubble) {
-      this.speechBubble.destroy();
+      this.speechBubble.setAlpha(0);
       this.speechBubble = null;
     }
 
     if (this.speechText) {
-      this.speechText.destroy();
+      this.speechText.setAlpha(0);
       this.speechText = null;
     }
   }
@@ -571,16 +688,24 @@ export default class GameScene extends Phaser.Scene {
 
     this.clearClientUI();
 
-    if (this.choiceButtonGroup) {
-      this.choiceButtonGroup.getChildren().forEach((child) => {
-        child.destroy();
-      });
-      this.choiceButtonGroup.clear(true, true);
-      this.choiceButtonGroup.destroy(true);
+    if (!this.choiceButtonGroup) {
+      console.warn(
+        "⚠️ [spawnRandomCustomer] choiceButtonGroup이 없어 새로 생성합니다."
+      );
+      this.choiceButtonGroup = this.add.group();
+    } else {
+      const children = this.choiceButtonGroup.getChildren();
+      if (Array.isArray(children) && children.length > 0) {
+        children.forEach((child) => {
+          if (child && child.destroy) {
+            child.destroy();
+          }
+        });
+        this.choiceButtonGroup.clear(true, true);
+      }
     }
-    this.choiceButtonGroup = this.add.group();
 
-    this.cleanupUI();
+    this.cleanupUI(); // 기존 UI 정리
 
     this.currentCustomerId = Phaser.Math.Between(1, 8);
     this.currentItemData = Phaser.Math.RND.pick(itemInfo);
@@ -626,12 +751,10 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(3)
       .setAlpha(1);
 
-    if (this.speechBubble) {
-      this.speechBubble.setDisplaySize(
-        this.speechBubble.width * 0.6,
-        this.speechBubble.height * 0.3
-      );
-    }
+    this.speechBubble.setDisplaySize(
+      this.speechBubble.width * 0.6,
+      this.speechBubble.height * 0.3
+    );
 
     this.speechText = this.add
       .text(
@@ -650,18 +773,10 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(7);
 
     this.incrementDailyClientCount();
-    if (this.choiceButtonGroup) {
-      this.choiceButtonGroup.getChildren().forEach((child) => {
-        if (
-          child instanceof Phaser.GameObjects.Text ||
-          child instanceof Phaser.GameObjects.Graphics
-        ) {
-          child.destroy();
-        }
-      });
-      this.choiceButtonGroup.clear(true, true);
-    }
 
+    this.clearChoiceButtons();
+
+    // ✅ 새로운 선택 버튼 추가
     const { buttonImage: buttonImage1, buttonText: buttonText1 } =
       this.createImageButtonWithText(
         width / 3.6,
@@ -682,7 +797,6 @@ export default class GameScene extends Phaser.Scene {
         "관심 없어요",
         () => {
           this.clearChoiceButtons();
-
           this.clearClientUI();
 
           const hasInventoryItems = this.inventory.length > 0;
@@ -1338,16 +1452,51 @@ export default class GameScene extends Phaser.Scene {
   }
 
   public cleanupBuyerUI() {
+    console.log("🧹 [cleanupBuyerUI] 구매자 UI 정리 중...");
+
     if (this.moneyImage) {
       this.moneyImage.destroy();
       this.moneyImage = null;
       console.log("💰 돈 이미지 제거 완료!");
+    } else {
+      console.warn(
+        "⚠️ [cleanupBuyerUI] moneyImage가 이미 제거되었거나 존재하지 않음."
+      );
     }
 
-    this.choiceButtonGroup?.clear(true, true);
-    this.choiceButtonGroup?.destroy();
-    this.choiceButtonGroup = this.add.group();
+    if (this.choiceButtonGroup) {
+      try {
+        if (this.choiceButtonGroup.getChildren().length > 0) {
+          this.choiceButtonGroup.getChildren().forEach((child) => {
+            if (child && child.destroy) {
+              child.destroy();
+            }
+          });
+          this.choiceButtonGroup.clear(true, true);
+        }
+
+        this.choiceButtonGroup.destroy(true);
+        this.choiceButtonGroup = null;
+      } catch (error) {
+        console.error(
+          "❌ [cleanupBuyerUI] choiceButtonGroup 제거 중 오류 발생:",
+          error
+        );
+      }
+    } else {
+      console.warn(
+        "⚠️ [cleanupBuyerUI] choiceButtonGroup이 이미 존재하지 않음."
+      );
+    }
+
+    if (!this.choiceButtonGroup) {
+      this.choiceButtonGroup = this.add.group();
+      console.log("✅ [cleanupBuyerUI] choiceButtonGroup 새로 생성됨.");
+    }
+
+    console.log("✅ [cleanupBuyerUI] 정리 완료");
   }
+
   private setupNegotiationButtons(speechTextY: number) {
     const { width, height } = this.scale;
 
@@ -1824,5 +1973,105 @@ export default class GameScene extends Phaser.Scene {
     if (!this.petImage || !this.textures.exists(pet.image)) return;
     this.selectedPet = pet;
     this.petImage.setTexture(pet.image);
+  }
+
+  public resetDailyClientText() {
+    if (!this.cameras || !this.cameras.main) {
+      console.warn(
+        "🚨 [resetDailyClientText] cameras.main이 아직 초기화되지 않았습니다!"
+      );
+      return;
+    }
+
+    const width = this.cameras.main.width;
+    console.log("🔄 [GameScene] dailyClientText 초기화 시작...");
+
+    if (this.dailyClientText) {
+      console.log("♻️ 기존 dailyClientText 재활용");
+      this.dailyClientText.setText(`${this.dailyClientCount}명/8`);
+    } else {
+      console.warn("⚠️ dailyClientText가 존재하지 않음. 새로 생성합니다.");
+      this.dailyClientText = this.add
+        .text(width - 140, 90, `${this.dailyClientCount}명/8`, {
+          fontSize: "28px",
+          color: "#fff",
+          padding: { left: 10, right: 10, top: 5, bottom: 5 },
+        })
+        .setDepth(10)
+        .setOrigin(1, 0);
+    }
+
+    console.log(
+      "✅ dailyClientText가 정상적으로 갱신됨:",
+      this.dailyClientText.text
+    );
+  }
+  public refreshUI() {
+    console.log("🔄 [GameScene] UI 다시 그리는 중...");
+
+    if (!this.scene.isActive()) {
+      console.warn("⚠️ [GameScene] 활성화되지 않음. UI 업데이트 건너뜀.");
+      return;
+    }
+
+    this.updateUI();
+
+    if (!this.client) {
+      console.warn("⚠️ 클라이언트가 없음. 새 클라이언트 생성");
+      if (this.inventory.length > 0 && Math.random() < 0.4) {
+        this.spawnBuyer();
+      } else {
+        this.spawnRandomCustomer();
+      }
+    }
+
+    if (!this.speechBubble8) {
+      console.warn("⚠️ speechBubble8 없음. 새로 추가.");
+      this.speechBubble8 = this.add
+        .image(400, 300, "speechBubble8")
+        .setDepth(10);
+    }
+
+    if (!this.speechBubble9) {
+      console.warn("⚠️ speechBubble9 없음. 새로 추가.");
+      this.speechBubble9 = this.add
+        .image(600, 300, "speechBubble9")
+        .setDepth(10);
+    }
+
+    console.log("✅ [GameScene] refreshUI 완료.");
+  }
+
+  private displayInventoryItems() {
+    console.log("📦 [GameScene] 인벤토리 UI 업데이트 중...");
+
+    // 기존 아이템 삭제
+    if (!this.itemDisplayGroup) {
+      this.itemDisplayGroup = this.add.group();
+    } else {
+      this.itemDisplayGroup.clear(true, true);
+    }
+
+    if (this.inventory.length === 0) {
+      console.warn("⚠️ [GameScene] 인벤토리에 아이템이 없음.");
+      return;
+    }
+
+    // 새로운 아이템 추가
+    this.inventory.forEach((item, index) => {
+      const xPos = 100 + index * 100; // 위치 조정
+      const yPos = this.scale.height - 150;
+
+      const itemSprite = this.add.sprite(xPos, yPos, item.image);
+      itemSprite.setScale(0.5).setInteractive();
+
+      itemSprite.on("pointerdown", () => {
+        console.log(`🛍️ [GameScene] 아이템 선택됨: ${item.name}`);
+      });
+
+      this.itemDisplayGroup?.add(itemSprite);
+    });
+
+    console.log("✅ [GameScene] 인벤토리 UI 갱신 완료.");
   }
 }

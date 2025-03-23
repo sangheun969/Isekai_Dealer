@@ -3,14 +3,20 @@ const API_URL = "http://localhost:3001/api";
 export const saveGameProgress = async (
   money: number,
   items: any[],
+  petList: any[],
   customerData?: any
 ) => {
   try {
     const response = await fetch(`${API_URL}/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ money, items, customerData }),
+      body: JSON.stringify({ money, items, petList, customerData }),
     });
+
+    if (!response.ok) {
+      throw new Error(`서버 응답 실패: ${response.status}`);
+    }
+
     const result = await response.json();
     if (result.success) {
       console.log("✅ 게임 진행 데이터 저장 성공");

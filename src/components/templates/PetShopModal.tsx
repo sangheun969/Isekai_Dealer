@@ -13,12 +13,13 @@ interface PetShopModalProps {
   onPurchase?: (pet: Pet) => void;
 }
 
-const PetShopModal: React.FC<PetShopModalProps> = ({ onClose }) => {
+const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
   const [money, setMoney] = useState<number | null>(null);
+  const [ownedPets, setOwnedPets] = useState<Pet[]>([]);
   const pets = [
     {
       id: 1,
-      name: "귀여운 강아지",
+      name: "객관안 앵무새",
       image: "/images/main/pet2_1.png",
       price: 5000,
     },
@@ -31,15 +32,41 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose }) => {
   ];
   useEffect(() => {
     const gameScene = getGameInstance();
-
     if (gameScene) {
       gameScene.events.emit("getPlayerMoney", (currentMoney: number) => {
         setMoney(currentMoney);
       });
-    } else {
-      console.warn("❌ [PetShopModal] GameScene을 찾을 수 없습니다.");
+
+      // 기존에 보유한 펫 목록 불러오기
+      const storedPets = localStorage.getItem("ownedPets");
+      if (storedPets) {
+        setOwnedPets(JSON.parse(storedPets));
+      }
     }
   }, []);
+
+  const handlePurchase = (pet: Pet) => {
+    if (money !== null && money >= pet.price) {
+      const gameScene = getGameInstance();
+      if (gameScene) {
+        gameScene.events.emit("updatePlayerMoney", money - pet.price); // 💰 돈 차감
+        setMoney(money - pet.price);
+
+        // 새로운 펫 추가
+        const newPets = [...ownedPets, pet];
+        setOwnedPets(newPets);
+        localStorage.setItem("ownedPets", JSON.stringify(newPets)); // 📦 저장
+
+        if (onPurchase) {
+          onPurchase(pet); // 🛒 PetListModal에도 반영
+        }
+
+        alert(`✅ ${pet.name}을(를) 구매했습니다!`);
+      }
+    } else {
+      alert("❌ 코인이 부족합니다.");
+    }
+  };
 
   console.log("📌 [PetShopModal] 현재 보유 금액 업데이트:", money);
 
@@ -67,8 +94,16 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose }) => {
                 <span className="text-gray-600">
                   💰 {pet.price.toLocaleString()} 코인
                 </span>
-                <button className="mt-2 px-4 py-2 bg-gray-400 text-white rounded cursor-not-allowed">
-                  구매 기능 없음
+                <button
+                  className={`mt-2 px-4 py-2 ${
+                    money !== null && money >= pet.price
+                      ? "bg-blue-500 hover:bg-blue-600"
+                      : "bg-gray-400 cursor-not-allowed"
+                  } text-white rounded`}
+                  onClick={() => handlePurchase(pet)}
+                  disabled={money !== null && money < pet.price}
+                >
+                  구매하기
                 </button>
               </div>
             </div>

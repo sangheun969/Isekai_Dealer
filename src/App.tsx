@@ -5,7 +5,6 @@ import Scenes from "./game/Scenes";
 import SelectMain from "./game/SelectMain";
 import StoryScene from "./game/StoryScene";
 import GameScene from "./game/GameScene";
-import Noticeboard from "./game/Noticeboard";
 import { PetListProvider } from "./utils/PetListContext";
 import { setGameInstance } from "./components/organisms/gameInstance";
 
@@ -15,14 +14,7 @@ const App: React.FC = () => {
       type: Phaser.AUTO,
       width: window.innerWidth,
       height: window.innerHeight,
-      scene: [
-        BootScene,
-        Scenes,
-        SelectMain,
-        StoryScene,
-        GameScene,
-        Noticeboard,
-      ],
+      scene: [BootScene, Scenes, SelectMain, StoryScene, GameScene],
       parent: "phaser-game-container",
       audio: {
         disableWebAudio: false,
@@ -40,11 +32,7 @@ const App: React.FC = () => {
     };
   }, []);
 
-  return (
-    <PetListProvider>
-      <div id="phaser-game-container" className="w-full h-screen"></div>
-    </PetListProvider>
-  );
+  return <div id="phaser-game-container" className="w-full h-screen"></div>;
 };
 
 export default App;
