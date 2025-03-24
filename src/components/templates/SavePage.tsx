@@ -40,7 +40,7 @@ const SavePage: React.FC<{
 
   const handleSave = async (slotId: number) => {
     const currentData = { money: 100000, items: [] };
-    await saveGameProgress(currentData.money, currentData.items);
+    await saveGameProgress(currentData.money, currentData.items, [], {});
     setSaveSlots((prevSlots) =>
       prevSlots.map((slot) =>
         slot.id === slotId

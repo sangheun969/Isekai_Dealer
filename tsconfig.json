@@ -9,8 +9,8 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "outDir": "./dist",
@@ -18,5 +18,5 @@
     "removeComments": true,
     "sourceMap": false
   },
-  "include": ["src/backend"]
+  "include": ["src", "electron"]
 }

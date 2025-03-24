@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import Phaser from "phaser";
 import BootScene from "./game/BootScene";
 import Scenes from "./game/Scenes";
-import SelectMain from "./game/SelectMain";
 import StoryScene from "./game/StoryScene";
 import GameScene from "./game/GameScene";
 import { PetListProvider } from "./utils/PetListContext";
@@ -14,7 +13,7 @@ const App: React.FC = () => {
       type: Phaser.AUTO,
       width: window.innerWidth,
       height: window.innerHeight,
-      scene: [BootScene, Scenes, SelectMain, StoryScene, GameScene],
+      scene: [BootScene, Scenes, StoryScene, GameScene],
       parent: "phaser-game-container",
       audio: {
         disableWebAudio: false,

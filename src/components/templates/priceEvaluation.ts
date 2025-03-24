@@ -177,7 +177,6 @@ export function getPurchaseResponseText(
   clientOriginalPrice: number,
   maxNegotiationPrice: number
 ): { response: string; isFinal: boolean } {
-  // 🎯 클라이언트의 제안 가격이 최대 협상 가능 가격을 초과하면 재협상 유도
   if (offeredPrice > maxNegotiationPrice) {
     switch (personality) {
       case "호구":

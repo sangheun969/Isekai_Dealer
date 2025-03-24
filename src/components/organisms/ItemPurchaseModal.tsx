@@ -3,7 +3,7 @@ import React, { Component } from "react";
 interface ItemPurchaseModalProps {
   item: any;
   purchasePrice: number;
-  originalPrice: number; // ✅ 원
+  originalPrice: number;
   onClose: () => void;
 }
 

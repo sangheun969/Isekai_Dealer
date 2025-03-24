@@ -36,8 +36,6 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
       gameScene.events.emit("getPlayerMoney", (currentMoney: number) => {
         setMoney(currentMoney);
       });
-
-      // 기존에 보유한 펫 목록 불러오기
       const storedPets = localStorage.getItem("ownedPets");
       if (storedPets) {
         setOwnedPets(JSON.parse(storedPets));
@@ -49,16 +47,15 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
     if (money !== null && money >= pet.price) {
       const gameScene = getGameInstance();
       if (gameScene) {
-        gameScene.events.emit("updatePlayerMoney", money - pet.price); // 💰 돈 차감
+        gameScene.events.emit("updatePlayerMoney", money - pet.price);
         setMoney(money - pet.price);
 
-        // 새로운 펫 추가
         const newPets = [...ownedPets, pet];
         setOwnedPets(newPets);
-        localStorage.setItem("ownedPets", JSON.stringify(newPets)); // 📦 저장
+        localStorage.setItem("ownedPets", JSON.stringify(newPets));
 
         if (onPurchase) {
-          onPurchase(pet); // 🛒 PetListModal에도 반영
+          onPurchase(pet);
         }
 
         alert(`✅ ${pet.name}을(를) 구매했습니다!`);

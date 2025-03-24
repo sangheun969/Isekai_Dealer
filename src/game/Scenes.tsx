@@ -29,8 +29,18 @@ export default class Scenes extends Phaser.Scene {
 
     this.startButton.on("pointerdown", async () => {
       console.log("🆕 새 게임 시작!");
-      const newGameData = { money: 100000, items: [] };
-      await saveGameProgress(newGameData.money, newGameData.items);
+      const newGameData = {
+        money: 100000,
+        items: [],
+        petList: [],
+        customerData: {},
+      };
+      await saveGameProgress(
+        newGameData.money,
+        newGameData.items,
+        newGameData.petList,
+        newGameData.customerData
+      );
       this.scene.start("StoryScene", { savedData: newGameData });
     });
 

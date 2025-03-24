@@ -275,7 +275,7 @@ export default class GameScene extends Phaser.Scene {
       callback(this.money);
     });
 
-    this.events.on("updatePlayerMoney", async (newMoney) => {
+    this.events.on("updatePlayerMoney", async (newMoney: number) => {
       this.money = newMoney;
       this.moneyText?.setText(`💰 ${this.money.toLocaleString()} 코인`);
 
@@ -288,9 +288,12 @@ export default class GameScene extends Phaser.Scene {
       });
     });
 
-    this.events.on("addNewPet", (pet) => {
-      this.addPet(pet);
-    });
+    this.events.on(
+      "addNewPet",
+      (pet: { id: number; name: string; image: string }) => {
+        this.addPet(pet);
+      }
+    );
   }
 
   public createMoneyText() {
