@@ -20,7 +20,7 @@ const SetUpBar: React.FC<SetUpBarProps> = ({ onClose, scene }) => {
   }, [scene]);
 
   useEffect(() => {
-    const bgm = scene.registry.get("backgroundMusic") as
+    const bgm = scene.registry.get("bgm") as
       | Phaser.Sound.WebAudioSound
       | undefined;
     if (bgm && typeof bgm.volume === "number") {
@@ -41,7 +41,7 @@ const SetUpBar: React.FC<SetUpBarProps> = ({ onClose, scene }) => {
     const newVolume = parseFloat(event.target.value);
     setBgmVolume(newVolume);
 
-    const bgm = scene.registry.get("backgroundMusic") as
+    const bgm = scene.registry.get("bgm") as
       | Phaser.Sound.WebAudioSound
       | undefined;
     if (bgm && typeof bgm.setVolume === "function") {

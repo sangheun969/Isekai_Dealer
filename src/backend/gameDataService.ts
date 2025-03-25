@@ -5,6 +5,7 @@ interface GameProgressRow {
   money: number;
   items: string;
   customer_data: string;
+  pet_list: string;
 }
 
 const sqlite = sqlite3.verbose();
@@ -18,7 +19,8 @@ export const setupDatabase = () => {
         id INTEGER PRIMARY KEY UNIQUE,
         money INTEGER NOT NULL DEFAULT 100000,
         items TEXT NOT NULL DEFAULT '[]',
-        customer_data TEXT NOT NULL DEFAULT '{}'
+        customer_data TEXT NOT NULL DEFAULT '{}',
+        pet_list TEXT NOT NULL DEFAULT '[]' 
       )
     `);
   });
@@ -29,7 +31,8 @@ setupDatabase();
 export const saveGameProgress = (
   money: number,
   items: any[],
-  customerData: any = {}
+  customerData: any = {},
+  petList: any[] = []
 ) => {
   return new Promise<void>((resolve, reject) => {
     db.run(
@@ -38,7 +41,9 @@ export const saveGameProgress = (
        ON CONFLICT(id) DO UPDATE 
        SET money = excluded.money, 
            items = excluded.items,
-           customer_data = excluded.customer_data;`,
+           customer_data = excluded.customer_data,
+           pet_list = excluded.pet_list;`,
+
       [money, JSON.stringify(items), JSON.stringify(customerData)],
       (err) => {
         if (err) {
@@ -57,6 +62,7 @@ export const loadGameProgress = (): Promise<{
   money: number;
   items: any[];
   customerData: any;
+  petList: any[];
 }> => {
   return new Promise((resolve, reject) => {
     db.get(
@@ -76,6 +82,7 @@ export const loadGameProgress = (): Promise<{
             money: 100000,
             items: [],
             customerData: {},
+            petList: [],
           });
           return;
         }
@@ -87,6 +94,7 @@ export const loadGameProgress = (): Promise<{
             customerData: row.customer_data
               ? JSON.parse(row.customer_data)
               : {},
+            petList: row.pet_list ? JSON.parse(row.pet_list) : [],
           });
         } catch (parseError) {
           console.error("❌ 데이터 파싱 실패:", parseError);

@@ -6,9 +6,7 @@ let greenworks;
 try {
   greenworks = require("greenworks");
 } catch (error) {
-  console.error(
-    "❌ Greenworks 모듈을 찾을 수 없습니다. npm install을 실행하세요."
-  );
+  console.error("❌ Greenworks not found");
   process.exit(1);
 }
 

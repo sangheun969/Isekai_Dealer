@@ -7,7 +7,7 @@ const saveGameProgress = async (money, items, petList, customerData) => {
         const response = await fetch(`${API_URL}/save`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ money, items, petList, customerData }),
+            body: JSON.stringify({ money, items, customerData, petList }),
         });
         if (!response.ok) {
             throw new Error(`서버 응답 실패: ${response.status}`);

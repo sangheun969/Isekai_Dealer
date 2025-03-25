@@ -10,7 +10,7 @@ export const saveGameProgress = async (
     const response = await fetch(`${API_URL}/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ money, items, petList, customerData }),
+      body: JSON.stringify({ money, items, customerData, petList }),
     });
 
     if (!response.ok) {

@@ -16,21 +16,23 @@ const setupDatabase = () => {
         id INTEGER PRIMARY KEY UNIQUE,
         money INTEGER NOT NULL DEFAULT 100000,
         items TEXT NOT NULL DEFAULT '[]',
-        customer_data TEXT NOT NULL DEFAULT '{}'
+        customer_data TEXT NOT NULL DEFAULT '{}',
+        pet_list TEXT NOT NULL DEFAULT '[]' 
       )
     `);
     });
 };
 exports.setupDatabase = setupDatabase;
 (0, exports.setupDatabase)();
-const saveGameProgress = (money, items, customerData = {}) => {
+const saveGameProgress = (money, items, customerData = {}, petList = []) => {
     return new Promise((resolve, reject) => {
         db.run(`INSERT INTO game_progress (id, money, items, customer_data) 
        VALUES (1, ?, ?, ?) 
        ON CONFLICT(id) DO UPDATE 
        SET money = excluded.money, 
            items = excluded.items,
-           customer_data = excluded.customer_data;`, [money, JSON.stringify(items), JSON.stringify(customerData)], (err) => {
+           customer_data = excluded.customer_data,
+           pet_list = excluded.pet_list;`, [money, JSON.stringify(items), JSON.stringify(customerData)], (err) => {
             if (err) {
                 console.error("❌ 게임 데이터 저장 실패:", err.message);
                 reject(err);
@@ -57,6 +59,7 @@ const loadGameProgress = () => {
                     money: 100000,
                     items: [],
                     customerData: {},
+                    petList: [],
                 });
                 return;
             }
@@ -67,6 +70,7 @@ const loadGameProgress = () => {
                     customerData: row.customer_data
                         ? JSON.parse(row.customer_data)
                         : {},
+                    petList: row.pet_list ? JSON.parse(row.pet_list) : [],
                 });
             }
             catch (parseError) {

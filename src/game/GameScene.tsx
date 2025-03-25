@@ -192,7 +192,7 @@ export default class GameScene extends Phaser.Scene {
       petList: this.petList,
     });
 
-    this.updateUI(); // 🔄 UI 갱신
+    this.updateUI();
   }
 
   init(data: { savedData?: { money: number; items: any[]; customer?: any } }) {
@@ -471,8 +471,6 @@ export default class GameScene extends Phaser.Scene {
   }
 
   private incrementDailyClientCount() {
-    this.dailyClientCount++;
-
     this.dailyClientCount++;
 
     if (this.dailyClientCount > 8) {
@@ -779,7 +777,6 @@ export default class GameScene extends Phaser.Scene {
 
     this.clearChoiceButtons();
 
-    // ✅ 새로운 선택 버튼 추가
     const { buttonImage: buttonImage1, buttonText: buttonText1 } =
       this.createImageButtonWithText(
         width / 3.6,
