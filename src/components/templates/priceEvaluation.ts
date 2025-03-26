@@ -31,32 +31,32 @@ export function getResponseText(
   if (offeredPrice >= minAcceptablePrice) {
     switch (personality) {
       case "철저한 협상가":
-        return { response: "이 정도면 괜찮겠군요. 거래하죠!", isFinal: true };
+        return { response: "이 정도면 괜찮겠군요.", isFinal: true };
       case "도둑놈 기질":
         return {
-          response: "이런 가격에 판다고요? 개이득! 거래합시다.",
+          response: "크크 ",
           isFinal: true,
         };
       case "부유한 바보":
         return {
-          response: "오! 좋아요, 아무 가격이나 괜찮습니다! 거래 완료!",
+          response: "오! 좋아요, 아무 가격이나 괜찮습니다!",
           isFinal: true,
         };
       case "초보 수집가":
         return {
-          response: "이게 적정 가격일까요? 잘 모르겠네요. 좋습니다.",
+          response: "이게 적정 가격일까요? 잘 모르겠네요",
           isFinal: true,
         };
       case "화끈한 사람":
-        return { response: "좋아! 바로 거래합시다!", isFinal: true };
+        return { response: "좋습니다!", isFinal: true };
       case "수상한 밀수업자":
         return {
-          response: "이 가격이면 나도 남는 게 없군. 거래하지.",
+          response: "이 가격이면 나도 남는 게 없군.",
           isFinal: true,
         };
       default:
         return {
-          response: `"좋습니다. 거래할게요!"`,
+          response: `"거래 끝난거죠?"`,
           isFinal: true,
         };
     }
@@ -77,7 +77,7 @@ export function getResponseText(
       };
     case "도둑놈 기질":
       return {
-        response: `음..., 안 넘어가시네... ${Math.floor(
+        response: `음... ${Math.floor(
           suggestedPrice * 0.8
         )}코인까지 내려줄게요.`,
         isFinal: false,
@@ -169,82 +169,105 @@ export function getMinPurchasePrice(
 
   return Math.min(minPrice, maxNegotiationPrice);
 }
-
 export function getPurchaseResponseText(
   offeredPrice: number,
   minPurchasePrice: number,
   personality: string,
-  clientOriginalPrice: number,
+  lastClientPrice: number,
+  originalPrice: number,
   maxNegotiationPrice: number
-): { response: string; isFinal: boolean } {
-  if (offeredPrice > maxNegotiationPrice) {
+): { response: string; isFinal: boolean; increasedPrice?: number } {
+  const toleranceMultiplier = Math.random() * (2.2 - 1.05) + 1.05;
+  const allowedOverPrice = maxNegotiationPrice * toleranceMultiplier;
+  if (offeredPrice > allowedOverPrice) {
+    const personalityMultipliers: Record<string, number> = {
+      호구: 1.2,
+      "철저한 협상가": 1.1,
+      "도둑놈 기지": 1.15,
+      "부유한 바보": 1.3,
+      "초보 수집가": 1.15,
+      "화끈한 사람": 1.2,
+      "수상한 밀수업자": 1.15,
+    };
+
+    const increaseRate = personalityMultipliers[personality] || 1.15;
+    const increasedPrice = Math.max(
+      Math.floor((lastClientPrice * increaseRate) / 100) * 100,
+      lastClientPrice
+    );
     switch (personality) {
       case "호구":
         return {
-          response: `음... 💰${Math.floor(
-            Math.min(clientOriginalPrice * 1.5, maxNegotiationPrice)
-          )}코인은 어떠세요?`,
+          response: `음... 💰${increasedPrice}코인은 어떠세요?`,
           isFinal: false,
         };
       case "철저한 협상가":
         return {
-          response: `이 가격은 너무 높습니다! 💰${Math.floor(
-            Math.min(clientOriginalPrice * 1.2, maxNegotiationPrice)
-          )}코인이라면 고려해보죠.`,
+          response: `이 가격은 너무 높습니다! 💰${increasedPrice}코인이라면 고려해보죠.`,
           isFinal: false,
         };
       case "도둑놈 기질":
         return {
-          response: `이 가격으론 안 돼요! 💰${Math.floor(
-            Math.min(clientOriginalPrice * 1.5, maxNegotiationPrice)
-          )}코인까지 깎아주면 사겠습니다.`,
+          response: `이 가격으론 안 돼요! 💰${increasedPrice}코인까지 깎아주면 사겠습니다.`,
           isFinal: false,
         };
       case "부유한 바보":
         return {
-          response: `이 가격은 적당한가요? 💰${Math.floor(
-            Math.min(clientOriginalPrice * 1.7, maxNegotiationPrice)
-          )}코인에 사겠습니다!`,
+          response: `누구를 바보로 생각하나.. 💰${increasedPrice}코인에 하시죠!`,
           isFinal: false,
         };
       case "초보 수집가":
         return {
-          response: `이게 적정 가격일까요? 💰${Math.floor(
-            Math.min(clientOriginalPrice * 1.3, maxNegotiationPrice)
-          )}코인에 주시면 사겠습니다!`,
+          response: `이게 적정 가격일까요? 💰${increasedPrice}코인에 주시면 사겠습니다!`,
           isFinal: false,
         };
       case "화끈한 사람":
         return {
-          response: `너무 비싸잖아! 💰${Math.floor(
-            Math.min(clientOriginalPrice * 1.8, maxNegotiationPrice)
-          )}코인까지 내려주세요!`,
+          response: `너무 비싸잖아! 💰${increasedPrice}코인까지 내려주세요!`,
           isFinal: false,
         };
       case "수상한 밀수업자":
         return {
-          response: `이 가격은 너무 높군. 💰${Math.floor(
-            Math.min(clientOriginalPrice * 1.6, maxNegotiationPrice)
-          )}코인에 팔면 바로 사겠습니다.`,
+          response: `이 가격은 너무 높군. 💰${increasedPrice}코인에 팔면 바로 사겠습니다.`,
           isFinal: false,
         };
       default:
         return {
-          response: `"💰${clientOriginalPrice}코인 이요? ${Math.floor(
-            Math.min(clientOriginalPrice * 0.9, maxNegotiationPrice)
-          )}코인이라면 거래합시다."`,
+          response: `💰${increasedPrice}코인이라면 거래합시다.`,
           isFinal: false,
+          increasedPrice,
         };
     }
   }
 
-  // 기존 코드 유지 (최대 협상 가격 이하일 때)
   if (offeredPrice >= minPurchasePrice) {
+    console.log(
+      "🎯 거래 성사 조건 통과!",
+      "\n📦 제시 가격:",
+      offeredPrice,
+      "\n✅ 최소 허용 가격:",
+      minPurchasePrice
+    );
     return { response: "좋습니다. 거래합시다!", isFinal: true };
+  } else {
+    console.log(
+      "❌ 거래 실패 조건",
+      "\n📦 제시 가격: offeredPrice",
+      offeredPrice,
+      "\n❗ 최소 허용 가격: minPurchasePrice",
+      minPurchasePrice
+    );
+  }
+
+  if (offeredPrice > lastClientPrice) {
+    return {
+      response: `그 가격으론 곤란합니다. 💰${lastClientPrice.toLocaleString()}코인까지 가능합니다.`,
+      isFinal: false,
+    };
   }
 
   return {
-    response: "그 가격은 너무 낮군요. 좀 더 올려주실래요?",
+    response: `흠... 좀 더 적절한 가격을 제시해보시죠.`,
     isFinal: false,
   };
 }
