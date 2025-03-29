@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { getGameInstance } from "../organisms/gameInstance";
+import { usePetList } from "./PetListContext";
 
 interface Pet {
   id: number;
@@ -8,19 +9,17 @@ interface Pet {
 }
 
 interface PetListModalProps {
-  pets: Pet[];
   itemsPerPage: number;
   onClose: () => void;
 }
 
 const PetListModal: React.FC<PetListModalProps> = ({
-  pets,
   itemsPerPage,
   onClose,
 }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedPetId, setSelectedPetId] = useState<number>(0);
-  const [ownedPets, setOwnedPets] = useState<Pet[]>([]);
+  const { petList } = usePetList();
 
   const defaultPet: Pet = {
     id: 0,
@@ -28,23 +27,18 @@ const PetListModal: React.FC<PetListModalProps> = ({
     image: "/images/main/cat1.png",
   };
 
-  useEffect(() => {
-    const storedPets = localStorage.getItem("ownedPets");
-    if (storedPets) {
-      setOwnedPets(JSON.parse(storedPets));
-    }
-  }, []);
-
-  const allPets = [defaultPet, ...pets];
+  const allPets = [defaultPet, ...petList];
   const startIndex = currentPage * itemsPerPage;
   const selectedPets = allPets.slice(startIndex, startIndex + itemsPerPage);
 
-  useEffect(() => {
+  const handlePetSelection = (pet: Pet) => {
+    setSelectedPetId(pet.id);
     const gameScene = getGameInstance();
     if (gameScene && gameScene.scene.isActive()) {
-      gameScene.setSelectedPet(defaultPet);
+      gameScene.setSelectedPet(pet);
     }
-  }, []);
+  };
+
   const nextPage = () => {
     if (startIndex + itemsPerPage < allPets.length) {
       setCurrentPage((prev) => prev + 1);
@@ -54,14 +48,6 @@ const PetListModal: React.FC<PetListModalProps> = ({
   const prevPage = () => {
     if (currentPage > 0) {
       setCurrentPage((prev) => prev - 1);
-    }
-  };
-
-  const handlePetSelection = (pet: Pet) => {
-    setSelectedPetId(pet.id);
-    const gameScene = getGameInstance();
-    if (gameScene && gameScene.scene.isActive()) {
-      gameScene.setSelectedPet(pet);
     }
   };
 

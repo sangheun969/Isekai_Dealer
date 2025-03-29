@@ -4,15 +4,21 @@ import BootScene from "./game/BootScene";
 import Scenes from "./game/Scenes";
 import StoryScene from "./game/StoryScene";
 import GameScene from "./game/GameScene";
-import { PetListProvider } from "./utils/PetListContext";
 import { setGameInstance } from "./components/organisms/gameInstance";
+import { PetListProvider } from "./components/templates/PetListContext";
 
-const App: React.FC = () => {
+const App = () => {
   useEffect(() => {
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
-      width: window.innerWidth,
-      height: window.innerHeight,
+      width: 1920,
+      height: 1080,
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 1920,
+        height: 1080,
+      },
       scene: [BootScene, Scenes, StoryScene, GameScene],
       parent: "phaser-game-container",
       audio: {
@@ -31,7 +37,11 @@ const App: React.FC = () => {
     };
   }, []);
 
-  return <div id="phaser-game-container" className="w-full h-screen"></div>;
+  return (
+    <PetListProvider>
+      <div id="phaser-game-container" className="w-full h-screen" />
+    </PetListProvider>
+  );
 };
 
 export default App;

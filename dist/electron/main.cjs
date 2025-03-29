@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const path = require("path");
 const { app, BrowserWindow, ipcMain, screen } = require("electron");
+const { saveGameProgress, loadGameProgress, } = require("../src/backend/gameDataService");
 let greenworks;
 try {
     greenworks = require("greenworks");
@@ -57,14 +58,26 @@ ipcMain.on("save-game", (event, data) => {
         event.reply("save-game-response", { success: false });
     }
 });
-ipcMain.handle("load-game", async () => {
-    if (greenworks.fileExists("saveData.json")) {
-        const saveData = greenworks.readTextFromFile("saveData.json");
-        console.log("✅ Steam Cloud 데이터 불러오기 성공!");
-        return JSON.parse(saveData);
+ipcMain.handle("save-game-to-db", async (_, data) => {
+    const { money, items, customerData, petList } = data;
+    try {
+        await saveGameProgress(money, items, customerData, petList);
+        console.log("✅ 게임 데이터 SQLite 저장 성공!");
+        return { success: true };
     }
-    else {
-        console.warn("⚠️ Steam Cloud에 저장된 데이터가 없습니다.");
+    catch (error) {
+        console.error("❌ 게임 데이터 SQLite 저장 실패:", error);
+        return { success: false, error: error.message };
+    }
+});
+ipcMain.handle("load-game-from-db", async () => {
+    try {
+        const data = await loadGameProgress();
+        console.log("✅ 게임 데이터 SQLite 불러오기 성공!");
+        return data;
+    }
+    catch (error) {
+        console.error("❌ 게임 데이터 SQLite 불러오기 실패:", error);
         return null;
     }
 });

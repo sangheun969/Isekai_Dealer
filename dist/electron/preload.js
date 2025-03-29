@@ -9,8 +9,10 @@ try {
 catch (error) {
     console.error("❌ [Preload] Greenworks 로드 실패!", error);
 }
-contextBridge.exposeInMainWorld("electron", {
+contextBridge.exposeInMainWorld("api", {
     saveGame: (data) => ipcRenderer.send("save-game", data),
     loadGame: () => ipcRenderer.invoke("load-game"),
+    saveGameToDB: (data) => ipcRenderer.invoke("save-game-to-db", data),
+    loadGameFromDB: () => ipcRenderer.invoke("load-game-from-db"),
     greenworks: greenworks || null,
 });

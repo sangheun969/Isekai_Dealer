@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getGameInstance } from "../organisms/gameInstance";
+import { usePetList } from "./PetListContext";
 
 interface Pet {
   id: number;
@@ -15,8 +16,9 @@ interface PetShopModalProps {
 
 const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
   const [money, setMoney] = useState<number | null>(null);
-  const [ownedPets, setOwnedPets] = useState<Pet[]>([]);
-  const pets = [
+  const { petList, addPet } = usePetList();
+
+  const petStoreList: Pet[] = [
     {
       id: 1,
       name: "객관안 앵무새",
@@ -30,42 +32,50 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
       price: 7000,
     },
   ];
+
   useEffect(() => {
     const gameScene = getGameInstance();
     if (gameScene) {
       gameScene.events.emit("getPlayerMoney", (currentMoney: number) => {
         setMoney(currentMoney);
       });
-      const storedPets = localStorage.getItem("ownedPets");
-      if (storedPets) {
-        setOwnedPets(JSON.parse(storedPets));
-      }
     }
   }, []);
 
-  const handlePurchase = (pet: Pet) => {
-    if (money !== null && money >= pet.price) {
-      const gameScene = getGameInstance();
-      if (gameScene) {
-        gameScene.events.emit("updatePlayerMoney", money - pet.price);
-        setMoney(money - pet.price);
-
-        const newPets = [...ownedPets, pet];
-        setOwnedPets(newPets);
-        localStorage.setItem("ownedPets", JSON.stringify(newPets));
-
-        if (onPurchase) {
-          onPurchase(pet);
-        }
-
-        alert(`✅ ${pet.name}을(를) 구매했습니다!`);
-      }
-    } else {
+  const handlePurchase = async (pet: Pet) => {
+    if (money === null || money < pet.price) {
       alert("❌ 코인이 부족합니다.");
+      return;
+    }
+
+    const gameScene = getGameInstance();
+    if (!gameScene) return;
+
+    const updatedMoney = money - pet.price;
+
+    try {
+      const gameData = await window.api.loadGameFromDB();
+
+      const updatedPetList = [...petList, pet];
+
+      await window.api.saveGameToDB({
+        money: updatedMoney,
+        items: gameData.items,
+        customerData: gameData.customerData,
+        petList: updatedPetList,
+      });
+
+      setMoney(updatedMoney);
+      addPet(pet);
+      gameScene.events.emit("updatePlayerMoney", updatedMoney);
+
+      if (onPurchase) onPurchase(pet);
+      alert(`✅ ${pet.name}을(를) 구매했습니다!`);
+    } catch (err) {
+      console.error("❌ 펫 구매 처리 중 오류:", err);
+      alert("데이터 저장에 실패했습니다.");
     }
   };
-
-  console.log("📌 [PetShopModal] 현재 보유 금액 업데이트:", money);
 
   return (
     <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -75,8 +85,9 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
         <p className="text-lg font-semibold mb-4">
           {money !== null ? `${money.toLocaleString()} 코인` : "로딩 중..."}
         </p>
+
         <div className="flex flex-col gap-4">
-          {pets.map((pet) => (
+          {petStoreList.map((pet) => (
             <div
               key={pet.id}
               className="flex items-center gap-4 p-3 border rounded-lg"
@@ -106,6 +117,7 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
             </div>
           ))}
         </div>
+
         <button
           className="mt-4 px-4 py-2 bg-red-500 text-white rounded w-full"
           onClick={onClose}

@@ -18,5 +18,5 @@
     "removeComments": true,
     "sourceMap": false
   },
-  "include": ["src", "electron"]
+  "include": ["src", "electron", "src/types"]
 }

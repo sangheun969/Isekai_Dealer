@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import PetShopModal from "./PetShopModal";
+import { PetListProvider } from "./PetListContext";
 
 interface EndOfDayModalProps {
   purchases: number;
@@ -68,7 +69,9 @@ const EndOfDayModal: React.FC<EndOfDayModalProps> = ({
             </button>
           </div>
           {showPetShop && (
-            <PetShopModal onClose={() => setShowPetShop(false)} />
+            <PetListProvider>
+              <PetShopModal onClose={() => setShowPetShop(false)} />
+            </PetListProvider>
           )}
         </div>
       ) : (

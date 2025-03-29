@@ -45,6 +45,7 @@ class GameScene extends phaser_1.default.Scene {
     isPersonalityModalOpen = false;
     currentClientGreedLevel = 1;
     currentItemData = null;
+    lastClientPrice = 0;
     price;
     buttonText5;
     setModalState = null;
@@ -57,6 +58,7 @@ class GameScene extends phaser_1.default.Scene {
     selectedItem = null;
     purchasePrice = 0;
     negotiationAttempts = 0;
+    maxNegotiationAttempts = 0;
     dailyClientCount = 0;
     todayPurchaseAmount = 0;
     todaySalesAmount = 0;
@@ -71,6 +73,12 @@ class GameScene extends phaser_1.default.Scene {
     client;
     speechBubble8;
     speechBubble9;
+    buttonImage6;
+    buttonText6;
+    buttonImage7;
+    buttonText7;
+    yesButton;
+    yesText;
     petList = [];
     petListButton = null;
     selectedPet = this.petList[0];
@@ -385,7 +393,6 @@ class GameScene extends phaser_1.default.Scene {
     }
     incrementDailyClientCount() {
         this.dailyClientCount++;
-        this.dailyClientCount++;
         if (this.dailyClientCount > 8) {
             this.dailyClientCount = 1;
             this.showEndOfDayModal();
@@ -604,8 +611,16 @@ class GameScene extends phaser_1.default.Scene {
             .setDepth(3)
             .setAlpha(1);
         this.speechBubble.setDisplaySize(this.speechBubble.width * 0.6, this.speechBubble.height * 0.3);
+        const greetingTexts = [
+            "이 물건을 좀 봐주게",
+            "이 물건을 보여드릴게요",
+            "좋은 물건을 가지고 왔네",
+            "이건 꼭 보셔야 해요!",
+            "이거 흥미로울 겁니다.",
+        ];
+        const randomGreeting = greetingTexts[Math.floor(Math.random() * greetingTexts.length)];
         this.speechText = this.add
-            .text(width / 3.6, height / 3 - 40, "안녕하세요. 이 물건을 보여드릴게요", {
+            .text(width / 3.6, height / 3 - 40, randomGreeting, {
             fontFamily: "Arial",
             fontSize: "22px",
             color: "#ffffff",
@@ -718,7 +733,6 @@ class GameScene extends phaser_1.default.Scene {
                 const item = itemInfo_1.default.find((i) => i.id === Number(this.selectedItemKey?.replace("item", "")));
                 if (item) {
                     this.inventory.push({ ...item, price: this.suggestedPrice });
-                    console.log("📦 인벤토리에 추가됨:", item);
                 }
                 this.cleanupUI();
                 const hasInventoryItems = this.inventory.length > 0;
@@ -738,7 +752,7 @@ class GameScene extends phaser_1.default.Scene {
                 }
             }
         });
-        const { buttonImage: buttonImage4, buttonText: buttonText4 } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", "이러시면 저희 남는게 없어요..", () => {
+        const { buttonImage: buttonImage4, buttonText: buttonText4 } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", "음..이 가격은 어떨까요?", () => {
             buttonImage4.destroy();
             buttonText4.destroy();
             const createInputField = (defaultValue = "") => {
@@ -1000,6 +1014,8 @@ class GameScene extends phaser_1.default.Scene {
     spawnBuyer() {
         const { width, height } = this.scale;
         this.clearClientUI();
+        this.maxNegotiationAttempts = phaser_1.default.Math.Between(2, 4);
+        this.negotiationAttempts = 0;
         if (this.inventory.length === 0) {
             console.warn("📦 인벤토리가 비어 있어 구매자가 등장하지 않음");
             this.spawnRandomCustomer();
@@ -1014,6 +1030,8 @@ class GameScene extends phaser_1.default.Scene {
         this.selectedItemKey = `item${this.selectedItem.id}`;
         const originalPrice = this.selectedItem.originalPrice || this.selectedItem.price;
         const purchasePrice = Math.floor(this.selectedItem.price * 1.2);
+        this.purchasePrice = purchasePrice;
+        this.lastClientPrice = purchasePrice;
         if (this.setModalState) {
             this.setModalState(true, this.selectedItem, purchasePrice);
         }
@@ -1034,7 +1052,7 @@ class GameScene extends phaser_1.default.Scene {
             .setAlpha(1);
         this.speechBubble.setDisplaySize(this.speechBubble.width * 0.6, this.speechBubble.height * 0.3);
         this.speechText = this.add
-            .text(width / 3.6, height / 3 - 40, `이 물건을 사고 싶은데, ${purchasePrice.toLocaleString()} 코인 이정도면 괜찮나요?`, {
+            .text(width / 3.6, height / 3 - 40, `이 물건을 사고 싶은데, ${purchasePrice.toLocaleString()} 코인 이정도면 괜찮은가?`, {
             fontSize: "20px",
             color: "#fffafa",
             fontFamily: "Arial",
@@ -1059,15 +1077,6 @@ class GameScene extends phaser_1.default.Scene {
         this.saveGameState();
     }
     cleanupBuyerUI() {
-        console.log("🧹 [cleanupBuyerUI] 구매자 UI 정리 중...");
-        if (this.moneyImage) {
-            this.moneyImage.destroy();
-            this.moneyImage = null;
-            console.log("💰 돈 이미지 제거 완료!");
-        }
-        else {
-            console.warn("⚠️ [cleanupBuyerUI] moneyImage가 이미 제거되었거나 존재하지 않음.");
-        }
         if (this.choiceButtonGroup) {
             try {
                 if (this.choiceButtonGroup.getChildren().length > 0) {
@@ -1094,9 +1103,8 @@ class GameScene extends phaser_1.default.Scene {
         }
         console.log("✅ [cleanupBuyerUI] 정리 완료");
     }
-    setupNegotiationButtons(speechTextY) {
-        const { width, height } = this.scale;
-        const { buttonImage: buttonImage6, buttonText: buttonText6 } = this.createImageButtonWithText(width / 3.6, height / 1.5 - 100, "speechBubble8", "좋습니다.", () => {
+    createConfirmButtonCallback(confirmedPrice) {
+        return () => {
             if (!this.selectedItemKey) {
                 console.warn("🚨 아이템이 선택되지 않았습니다.");
                 return;
@@ -1111,7 +1119,8 @@ class GameScene extends phaser_1.default.Scene {
                 this.moneyImage = null;
             }
             const soldItem = this.inventory[itemIndex];
-            const salePrice = Math.floor(soldItem.price * 1.2);
+            const salePrice = confirmedPrice ?? Math.floor(soldItem.price * 1.2);
+            console.log("✅ 최종 판매 가격:", salePrice);
             this.todaySalesAmount += salePrice;
             this.todaySalesCount++;
             this.inventory.splice(itemIndex, 1);
@@ -1127,12 +1136,42 @@ class GameScene extends phaser_1.default.Scene {
             else {
                 this.spawnRandomCustomer();
             }
-        });
+        };
+    }
+    setupNegotiationButtons(speechTextY, confirmedPrice) {
+        const { width, height } = this.scale;
+        const { buttonImage: buttonImage6, buttonText: buttonText6 } = this.createImageButtonWithText(width / 3.6, height / 1.5 - 100, "speechBubble8", "좋습니다.", this.createConfirmButtonCallback(confirmedPrice));
         const { buttonImage: buttonImage7, buttonText: buttonText7 } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", "재협상을 하시죠.", () => {
-            buttonImage7.destroy();
-            buttonText7.destroy();
+            this.negotiationAttempts++;
             buttonImage6.setVisible(false);
             buttonText6.setVisible(false);
+            buttonImage7.setVisible(false);
+            buttonText7.setVisible(false);
+            buttonImage8.setVisible(false);
+            buttonText8.setVisible(false);
+            if (this.negotiationAttempts >= this.maxNegotiationAttempts) {
+                if (this.speechText) {
+                    const exitMessages = [
+                        "크으으으으",
+                        "됐어요, 안 살래요!",
+                        "더러워서 간다!",
+                        "적당히 하쇼!",
+                    ];
+                    const message = exitMessages[Math.floor(Math.random() * exitMessages.length)];
+                    this.speechText.setText(message);
+                }
+                this.time.delayedCall(1500, () => {
+                    this.cleanupBuyerUI();
+                    const hasInventoryItems = this.inventory.length > 0;
+                    if (hasInventoryItems && Math.random() < 0.4) {
+                        this.spawnBuyer();
+                    }
+                    else {
+                        this.spawnRandomCustomer();
+                    }
+                });
+                return;
+            }
             const createInputField = (defaultValue = "") => {
                 const inputBg = this.add
                     .image(width / 2, height / 2, "reinputPrice")
@@ -1236,7 +1275,6 @@ class GameScene extends phaser_1.default.Scene {
                             document.body.removeChild(warningMessage);
                         }
                         inputBg.setVisible(false);
-                        console.log(`✅ ${price.toLocaleString()} 코인으로 협상 진행`);
                         const { buttonImage: yesButton, buttonText: yesText } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", `${price.toLocaleString()}코인에 해드리겠습니다.`, () => {
                             const minPurchasePrice = (0, priceEvaluation_1.getMinPurchasePrice)(this.suggestedPrice, this.currentClientPersonality);
                             const maxMultipliers = {
@@ -1251,31 +1289,45 @@ class GameScene extends phaser_1.default.Scene {
                             const personality = this.currentClientPersonality ?? "철저한 협상가";
                             const maxNegotiationPrice = this.suggestedPrice *
                                 (maxMultipliers[personality] || 2.0);
-                            const { response: negotiationResponse, isFinal } = (0, priceEvaluation_1.getPurchaseResponseText)(price, minPurchasePrice, this.currentClientPersonality, this.suggestedPrice, maxNegotiationPrice);
+                            const { response: negotiationResponse, isFinal, increasedPrice, } = (0, priceEvaluation_1.getPurchaseResponseText)(price, minPurchasePrice, this.currentClientPersonality, this.lastClientPrice, this.suggestedPrice, maxNegotiationPrice);
+                            const rejectionMultiplier = phaser_1.default.Math.FloatBetween(3, 4.5);
+                            this.yesButton = yesButton;
+                            this.yesText = yesText;
+                            this.choiceButtonGroup?.add(yesButton);
+                            this.choiceButtonGroup?.add(yesText);
+                            if (price >= this.lastClientPrice * rejectionMultiplier) {
+                                this.yesButton?.destroy();
+                                this.yesText?.destroy();
+                                if (this.speechText) {
+                                    const exitMessages = [
+                                        "크으으으으",
+                                        "됐어요, 안 살래요!",
+                                        "더러워서 간다!",
+                                        "적당히 하쇼!",
+                                    ];
+                                    const message = exitMessages[Math.floor(Math.random() * exitMessages.length)];
+                                    this.speechText.setText(message);
+                                }
+                                this.time.delayedCall(1500, () => {
+                                    this.cleanupBuyerUI();
+                                    const hasInventoryItems = this.inventory.length > 0;
+                                    if (hasInventoryItems && Math.random() < 0.4) {
+                                        this.spawnBuyer();
+                                    }
+                                    else {
+                                        this.spawnRandomCustomer();
+                                    }
+                                });
+                                return;
+                            }
                             if (this.speechText) {
                                 this.speechText.setText(negotiationResponse);
                             }
                             yesButton.destroy();
                             yesText.destroy();
-                            buttonImage6.setVisible(false);
-                            buttonText6.setVisible(false);
-                            if (!isFinal) {
-                                yesText.setText(`${price.toLocaleString()}코인에 해드리겠습니다.`);
-                                const reinputButton = this.add
-                                    .image(width / 4 + 230, height / 1.8 + 120, "reinputIcon")
-                                    .setScale(0.1)
-                                    .setDepth(8)
-                                    .setInteractive();
-                                reinputButton.on("pointerdown", () => {
-                                    yesButton.setVisible(false);
-                                    yesText.setVisible(false);
-                                    reinputButton.setVisible(false);
-                                    this.setupNegotiationButtons(height / 1.5);
-                                });
-                                this.choiceButtonGroup?.add(reinputButton);
-                                return;
-                            }
                             if (isFinal) {
+                                this.yesButton?.destroy();
+                                this.yesText?.destroy();
                                 const { buttonImage: confirmButton, buttonText: confirmText, } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", "판매하기", () => {
                                     if (this.moneyImage) {
                                         this.moneyImage.destroy();
@@ -1297,17 +1349,12 @@ class GameScene extends phaser_1.default.Scene {
                                 this.choiceButtonGroup?.add(confirmText);
                             }
                             else {
-                                const newSuggestedPrice = Math.floor(minPurchasePrice * 1.1);
-                                const { buttonImage: reNegotiateButton, buttonText: reNegotiateText, } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", `그럼 ${newSuggestedPrice.toLocaleString()}코인에 어떠세요?`, () => {
-                                    if (this.speechText) {
-                                        this.speechText.setText(`${newSuggestedPrice.toLocaleString()}코인에 어떠세요?`);
-                                    }
-                                    reNegotiateButton.destroy();
-                                    reNegotiateText.destroy();
-                                    this.setupNegotiationButtons(height / 1.5);
-                                });
-                                this.choiceButtonGroup?.add(reNegotiateButton);
-                                this.choiceButtonGroup?.add(reNegotiateText);
+                                buttonImage6.setVisible(true);
+                                buttonText6.setVisible(true);
+                                buttonImage7.setVisible(true);
+                                buttonText7.setVisible(true);
+                                buttonImage8.setVisible(true);
+                                buttonText8.setVisible(true);
                             }
                         });
                         this.choiceButtonGroup?.add(yesButton);
@@ -1407,7 +1454,7 @@ class GameScene extends phaser_1.default.Scene {
         if (!this.petListRoot) {
             this.petListRoot = (0, client_1.createRoot)(modalContainer);
         }
-        this.petListRoot.render((0, jsx_runtime_1.jsx)(PetListModal_1.default, { pets: [], itemsPerPage: 3, onClose: closePetList }));
+        this.petListRoot.render((0, jsx_runtime_1.jsx)(PetListModal_1.default, { itemsPerPage: 3, onClose: closePetList }));
     }
     addPet(pet) {
         if (!this.petList.some((p) => p.id === pet.id)) {

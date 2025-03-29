@@ -4,11 +4,13 @@ interface Pet {
   id: number;
   name: string;
   image: string;
+  price: number;
 }
 
 interface PetListContextType {
-  pets: Pet[];
+  petList: Pet[];
   addPet: (pet: Pet) => void;
+  setPetList: (pets: Pet[]) => void;
 }
 
 const PetListContext = createContext<PetListContextType | undefined>(undefined);
@@ -16,34 +18,33 @@ const PetListContext = createContext<PetListContextType | undefined>(undefined);
 export const PetListProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [pets, setPets] = useState<Pet[]>([]);
+  const [petList, setPetList] = useState<Pet[]>([]);
 
   useEffect(() => {
-    const storedPets = localStorage.getItem("petList");
-    if (storedPets) {
-      setPets(JSON.parse(storedPets));
-    }
+    window.api.loadGameFromDB().then((data) => {
+      if (data?.petList) {
+        setPetList(data.petList);
+      }
+    });
   }, []);
 
   const addPet = (pet: Pet) => {
-    setPets((prevPets) => {
-      const updatedPets = [...prevPets, pet];
-      localStorage.setItem("petList", JSON.stringify(updatedPets));
-      return updatedPets;
+    setPetList((prev) => {
+      const updated = [...prev, pet];
+      return updated;
     });
   };
 
   return (
-    <PetListContext.Provider value={{ pets, addPet }}>
+    <PetListContext.Provider value={{ petList, addPet, setPetList }}>
       {children}
     </PetListContext.Provider>
   );
 };
 
-export const usePetList = (): PetListContextType => {
+export const usePetList = () => {
   const context = useContext(PetListContext);
-  if (!context) {
-    throw new Error("usePetList must be used within a PetListProvider");
-  }
+  if (!context)
+    throw new Error("usePetList must be used within PetListProvider");
   return context;
 };

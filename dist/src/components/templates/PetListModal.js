@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const jsx_runtime_1 = require("react/jsx-runtime");
 const react_1 = require("react");
 const gameInstance_1 = require("../organisms/gameInstance");
-const PetListModal = ({ pets, itemsPerPage, onClose, }) => {
+const PetListModal = ({ itemsPerPage, onClose, }) => {
     const [currentPage, setCurrentPage] = (0, react_1.useState)(0);
     const [selectedPetId, setSelectedPetId] = (0, react_1.useState)(0);
     const [ownedPets, setOwnedPets] = (0, react_1.useState)([]);
@@ -13,12 +13,24 @@ const PetListModal = ({ pets, itemsPerPage, onClose, }) => {
         image: "/images/main/cat1.png",
     };
     (0, react_1.useEffect)(() => {
-        const storedPets = localStorage.getItem("ownedPets");
-        if (storedPets) {
-            setOwnedPets(JSON.parse(storedPets));
+        const fetchPets = async () => {
+            try {
+                const data = await window.api.loadGameFromDB();
+                setOwnedPets(data.petList || []);
+            }
+            catch (error) {
+                console.error("❌ 펫 목록 불러오기 실패:", error);
+            }
+        };
+        fetchPets();
+    }, []);
+    (0, react_1.useEffect)(() => {
+        const gameScene = (0, gameInstance_1.getGameInstance)();
+        if (gameScene && gameScene.scene.isActive()) {
+            gameScene.setSelectedPet(defaultPet);
         }
     }, []);
-    const allPets = [defaultPet, ...pets];
+    const allPets = [defaultPet, ...ownedPets];
     const startIndex = currentPage * itemsPerPage;
     const selectedPets = allPets.slice(startIndex, startIndex + itemsPerPage);
     (0, react_1.useEffect)(() => {

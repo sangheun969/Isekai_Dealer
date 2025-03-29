@@ -18,7 +18,7 @@ const SetUpBar = ({ onClose, scene }) => {
         };
     }, [scene]);
     (0, react_1.useEffect)(() => {
-        const bgm = scene.registry.get("backgroundMusic");
+        const bgm = scene.registry.get("bgm");
         if (bgm && typeof bgm.volume === "number") {
             setBgmVolume(bgm.volume);
         }
@@ -30,7 +30,7 @@ const SetUpBar = ({ onClose, scene }) => {
     const handleBgmVolumeChange = (event) => {
         const newVolume = parseFloat(event.target.value);
         setBgmVolume(newVolume);
-        const bgm = scene.registry.get("backgroundMusic");
+        const bgm = scene.registry.get("bgm");
         if (bgm && typeof bgm.setVolume === "function") {
             bgm.setVolume(newVolume);
         }

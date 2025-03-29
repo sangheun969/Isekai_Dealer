@@ -184,9 +184,9 @@ export function getPurchaseResponseText(
       호구: 1.2,
       "철저한 협상가": 1.1,
       "도둑놈 기지": 1.15,
-      "부유한 바보": 1.3,
+      "부유한 바보": 1.7,
       "초보 수집가": 1.15,
-      "화끈한 사람": 1.2,
+      "화끈한 사람": 1.5,
       "수상한 밀수업자": 1.15,
     };
 
@@ -195,41 +195,49 @@ export function getPurchaseResponseText(
       Math.floor((lastClientPrice * increaseRate) / 100) * 100,
       lastClientPrice
     );
+
     switch (personality) {
       case "호구":
         return {
           response: `음... 💰${increasedPrice}코인은 어떠세요?`,
           isFinal: false,
+          increasedPrice,
         };
       case "철저한 협상가":
         return {
           response: `이 가격은 너무 높습니다! 💰${increasedPrice}코인이라면 고려해보죠.`,
           isFinal: false,
+          increasedPrice,
         };
       case "도둑놈 기질":
         return {
           response: `이 가격으론 안 돼요! 💰${increasedPrice}코인까지 깎아주면 사겠습니다.`,
           isFinal: false,
+          increasedPrice,
         };
       case "부유한 바보":
         return {
           response: `누구를 바보로 생각하나.. 💰${increasedPrice}코인에 하시죠!`,
           isFinal: false,
+          increasedPrice,
         };
       case "초보 수집가":
         return {
           response: `이게 적정 가격일까요? 💰${increasedPrice}코인에 주시면 사겠습니다!`,
           isFinal: false,
+          increasedPrice,
         };
       case "화끈한 사람":
         return {
           response: `너무 비싸잖아! 💰${increasedPrice}코인까지 내려주세요!`,
           isFinal: false,
+          increasedPrice,
         };
       case "수상한 밀수업자":
         return {
           response: `이 가격은 너무 높군. 💰${increasedPrice}코인에 팔면 바로 사겠습니다.`,
           isFinal: false,
+          increasedPrice,
         };
       default:
         return {
