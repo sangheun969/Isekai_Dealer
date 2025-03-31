@@ -26,13 +26,19 @@ exports.setupDatabase = setupDatabase;
 (0, exports.setupDatabase)();
 const saveGameProgress = (money, items, customerData = {}, petList = []) => {
     return new Promise((resolve, reject) => {
-        db.run(`INSERT INTO game_progress (id, money, items, customer_data) 
-       VALUES (1, ?, ?, ?) 
+        db.run(`INSERT INTO game_progress (id, money, items, customer_data, pet_list) 
+        VALUES (?, ?, ?, ?, ?) 
        ON CONFLICT(id) DO UPDATE 
        SET money = excluded.money, 
            items = excluded.items,
            customer_data = excluded.customer_data,
-           pet_list = excluded.pet_list;`, [money, JSON.stringify(items), JSON.stringify(customerData)], (err) => {
+           pet_list = excluded.pet_list;`, [
+            1,
+            money,
+            JSON.stringify(items),
+            JSON.stringify(customerData),
+            JSON.stringify(petList),
+        ], (err) => {
             if (err) {
                 console.error("❌ 게임 데이터 저장 실패:", err.message);
                 reject(err);

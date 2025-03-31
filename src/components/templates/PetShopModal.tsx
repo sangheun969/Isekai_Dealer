@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { getGameInstance } from "../organisms/gameInstance";
-import { usePetList } from "./PetListContext";
 
 interface Pet {
   id: number;
@@ -16,7 +15,7 @@ interface PetShopModalProps {
 
 const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
   const [money, setMoney] = useState<number | null>(null);
-  const { petList, addPet } = usePetList();
+  const [petList, setPetList] = useState<Pet[]>([]); // ✅ 로컬 상태에서만 사용
 
   const petStoreList: Pet[] = [
     {
@@ -40,6 +39,18 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
         setMoney(currentMoney);
       });
     }
+
+    // 💾 DB에서 기존 펫 리스트 불러오기
+    const fetchPetList = async () => {
+      try {
+        const gameData = await window.api.loadGameFromDB();
+        setPetList(gameData.petList || []);
+      } catch (err) {
+        console.error("❌ 펫 리스트 로드 실패:", err);
+      }
+    };
+
+    fetchPetList();
   }, []);
 
   const handlePurchase = async (pet: Pet) => {
@@ -52,11 +63,10 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
     if (!gameScene) return;
 
     const updatedMoney = money - pet.price;
+    const updatedPetList = [...petList, pet];
 
     try {
       const gameData = await window.api.loadGameFromDB();
-
-      const updatedPetList = [...petList, pet];
 
       await window.api.saveGameToDB({
         money: updatedMoney,
@@ -64,10 +74,14 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
         customerData: gameData.customerData,
         petList: updatedPetList,
       });
-
+      console.log("💾 저장되는 petList:", updatedPetList);
+      gameScene.addPet(pet);
       setMoney(updatedMoney);
-      addPet(pet);
+      setPetList(updatedPetList);
       gameScene.events.emit("updatePlayerMoney", updatedMoney);
+      gameScene.setSelectedPet(pet);
+
+      window.dispatchEvent(new Event("petListUpdated"));
 
       if (onPurchase) onPurchase(pet);
       alert(`✅ ${pet.name}을(를) 구매했습니다!`);

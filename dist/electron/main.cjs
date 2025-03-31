@@ -3,14 +3,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const path = require("path");
 const { app, BrowserWindow, ipcMain, screen } = require("electron");
-const { saveGameProgress, loadGameProgress, } = require("../src/backend/gameDataService");
+const { saveGameProgress, loadGameProgress, } = require("../dist/src/backend/gameDataService");
+const isDev = process.env.NODE_ENV === "development";
 let greenworks;
 try {
-    greenworks = require("greenworks");
+    greenworks = require(path.join(__dirname, "../node_modules/greenworks"));
+    console.log("✅ Greenworks 로드 성공");
 }
 catch (error) {
-    console.error("❌ Greenworks not found");
-    process.exit(1);
+    if (isDev) {
+        console.warn("⚠️ 개발 중 greenworks 없음. Steam 기능 비활성화");
+        greenworks = null;
+    }
+    else {
+        console.error("❌ Steam 환경이 아님. 종료합니다.");
+        process.exit(1);
+    }
 }
 const greenworksNodePath = require.resolve("greenworks/lib/greenworks-win64.node");
 if (!fs.existsSync(greenworksNodePath)) {
@@ -20,11 +28,17 @@ if (!fs.existsSync(greenworksNodePath)) {
 console.log(`🔍 Greenworks .node 파일 경로: ${greenworksNodePath}`);
 let mainWindow = null;
 app.whenReady().then(() => {
-    if (greenworks.init()) {
-        console.log("✅ Steam API 초기화 성공!");
+    app.commandLine.appendSwitch("force-device-scale-factor", "1");
+    if (greenworks) {
+        if (greenworks.init()) {
+            console.log("✅ Steam API 초기화 성공!");
+        }
+        else {
+            console.error("❌ Steam API 초기화 실패! Steam 클라이언트가 실행 중인지 확인하세요.");
+        }
     }
     else {
-        console.error("❌ Steam API 초기화 실패! Steam 클라이언트가 실행 중인지 확인하세요.");
+        console.warn("⚠️ greenworks 없음, Steam API 생략");
     }
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
     mainWindow = new BrowserWindow({
@@ -35,9 +49,13 @@ app.whenReady().then(() => {
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, "preload.js"),
+            zoomFactor: 1.0,
         },
     });
-    mainWindow.loadURL(`file://${path.join(__dirname, "../build/index.html")}`);
+    const isDev = process.env.NODE_ENV === "development";
+    mainWindow.loadURL(isDev
+        ? "http://localhost:5173"
+        : `file://${path.join(__dirname, "../build/index.html")}`);
     mainWindow.on("closed", () => {
         mainWindow = null;
     });

@@ -18,7 +18,6 @@ import {
   getMinPurchasePrice,
   getPurchaseResponseText,
 } from "../components/templates/priceEvaluation";
-import { PetListProvider } from "../components/templates/PetListContext";
 
 export default class GameScene extends Phaser.Scene {
   private background: Phaser.GameObjects.Image | null = null;
@@ -187,8 +186,6 @@ export default class GameScene extends Phaser.Scene {
   }
 
   public setGameData(money: number, inventory: any[], petList: any[]) {
-    console.log("🔄 [GameScene] 게임 데이터 설정 중...");
-
     this.money = money;
     this.inventory = inventory;
     this.petList = petList || [];
@@ -707,7 +704,7 @@ export default class GameScene extends Phaser.Scene {
 
     const customerKey = `client${this.currentCustomerId}`;
     this.customer = this.add.image(width / 2, height + 220, customerKey);
-    this.customer.setScale(0.7).setDepth(4).setOrigin(0.5, 1);
+    this.customer.setScale(0.8).setDepth(4).setOrigin(0.5, 1);
 
     if (this.currentItemData) {
       this.loadItem(this.currentItemData);
@@ -739,8 +736,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     this.speechBubble = this.add
-      .image(width / 3.6, height / 3 - 25, "speechBubble9")
-      .setScale(0.6)
+      .image(width / 5, height / 3 - 40, "speechBubble9")
+      .setScale(0.7)
       .setDepth(3)
       .setAlpha(1);
 
@@ -761,9 +758,9 @@ export default class GameScene extends Phaser.Scene {
       greetingTexts[Math.floor(Math.random() * greetingTexts.length)];
 
     this.speechText = this.add
-      .text(width / 3.6, height / 3 - 40, randomGreeting, {
+      .text(width / 5, height / 3 - 40, randomGreeting, {
         fontFamily: "Arial",
-        fontSize: "22px",
+        fontSize: "24px",
         color: "#ffffff",
         wordWrap: { width: this.speechBubble.displayWidth * 0.7 },
         align: "center",
@@ -777,7 +774,7 @@ export default class GameScene extends Phaser.Scene {
 
     const { buttonImage: buttonImage1, buttonText: buttonText1 } =
       this.createImageButtonWithText(
-        width / 3.6,
+        width / 5,
         height / 1.5 - 100,
         "speechBubble8",
         "어떻게 하고 싶으시죠?",
@@ -789,7 +786,7 @@ export default class GameScene extends Phaser.Scene {
 
     const { buttonImage: buttonImage2, buttonText: buttonText2 } =
       this.createImageButtonWithText(
-        width / 3.6,
+        width / 5,
         height / 1.5,
         "speechBubble8",
         "관심 없어요",
@@ -901,7 +898,7 @@ export default class GameScene extends Phaser.Scene {
 
     const { buttonImage: buttonImage3, buttonText: buttonText3 } =
       this.createImageButtonWithText(
-        width / 3.6,
+        width / 5,
         height / 1.5 - 100,
         "speechBubble8",
         "좋습니다.",
@@ -947,7 +944,7 @@ export default class GameScene extends Phaser.Scene {
 
     const { buttonImage: buttonImage4, buttonText: buttonText4 } =
       this.createImageButtonWithText(
-        width / 3.6,
+        width / 5,
         height / 1.5,
         "speechBubble8",
         "음..이 가격은 어떨까요?",
@@ -1033,7 +1030,7 @@ export default class GameScene extends Phaser.Scene {
               );
               const { buttonImage: buttonImage5, buttonText: buttonText5 } =
                 this.createImageButtonWithText(
-                  width / 3.6,
+                  width / 5,
                   height / 1.5,
                   "speechBubble8",
                   `제안 가격: ${price}코인`,
@@ -1078,7 +1075,7 @@ export default class GameScene extends Phaser.Scene {
 
                       const { buttonImage: yesButton, buttonText: yesText } =
                         this.createImageButtonWithText(
-                          width / 3.6,
+                          width / 5,
                           height / 1.5,
                           "speechBubble8",
                           "예",
@@ -1094,7 +1091,7 @@ export default class GameScene extends Phaser.Scene {
                               buttonImage: confirmButton,
                               buttonText: confirmText,
                             } = this.createImageButtonWithText(
-                              width / 3.6,
+                              width / 5,
                               height / 1.5,
                               "speechBubble8",
                               "좋습니다.",
@@ -1186,7 +1183,7 @@ export default class GameScene extends Phaser.Scene {
 
                         const { buttonImage: endButton, buttonText: endText } =
                           this.createImageButtonWithText(
-                            width / 3.6,
+                            width / 5,
                             height / 1.5,
                             "speechBubble8",
                             "다음 고객",
@@ -1356,7 +1353,7 @@ export default class GameScene extends Phaser.Scene {
       height + 220,
       `client${clientNumber}`
     );
-    this.customer.setScale(0.7).setDepth(4).setOrigin(0.5, 1);
+    this.customer.setScale(0.8).setDepth(4).setOrigin(0.5, 1);
 
     this.currentClientGreedLevel = this.getRandomGreedLevel();
 
@@ -1392,7 +1389,7 @@ export default class GameScene extends Phaser.Scene {
     });
 
     this.speechBubble = this.add
-      .image(width / 3.6, height / 3 - 25, "speechBubble9")
+      .image(width / 5, height / 3 - 25, "speechBubble9")
       .setScale(0.6)
       .setDepth(3)
       .setAlpha(1);
@@ -1404,7 +1401,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.speechText = this.add
       .text(
-        width / 3.6,
+        width / 5,
         height / 3 - 40,
         `이 물건을 사고 싶은데, ${purchasePrice.toLocaleString()} 코인 이정도면 괜찮은가?`,
         {
@@ -1530,7 +1527,7 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const { buttonImage: buttonImage6, buttonText: buttonText6 } =
       this.createImageButtonWithText(
-        width / 3.6,
+        width / 5,
         height / 1.5 - 100,
         "speechBubble8",
         "좋습니다.",
@@ -1539,7 +1536,7 @@ export default class GameScene extends Phaser.Scene {
 
     const { buttonImage: buttonImage7, buttonText: buttonText7 } =
       this.createImageButtonWithText(
-        width / 3.6,
+        width / 5,
         height / 1.5,
         "speechBubble8",
         "재협상을 하시죠.",
@@ -1691,7 +1688,7 @@ export default class GameScene extends Phaser.Scene {
 
                 const { buttonImage: yesButton, buttonText: yesText } =
                   this.createImageButtonWithText(
-                    width / 3.6,
+                    width / 5,
                     height / 1.5,
                     "speechBubble8",
                     `${price.toLocaleString()}코인에 해드리겠습니다.`,
@@ -1784,7 +1781,7 @@ export default class GameScene extends Phaser.Scene {
                           buttonImage: confirmButton,
                           buttonText: confirmText,
                         } = this.createImageButtonWithText(
-                          width / 3.6,
+                          width / 5,
                           height / 1.5,
                           "speechBubble8",
                           "판매하기",
@@ -1834,7 +1831,7 @@ export default class GameScene extends Phaser.Scene {
       );
     const { buttonImage: buttonImage8, buttonText: buttonText8 } =
       this.createImageButtonWithText(
-        width / 3.6,
+        width / 5,
         height / 1.5 + 100,
         "speechBubble8",
         "안팝니다.",
@@ -1940,36 +1937,38 @@ export default class GameScene extends Phaser.Scene {
   }
 
   private showPetListModal() {
-    if (this.modalOpen) return;
+    if (document.getElementById("pet-list-modal")) return;
+
     this.modalOpen = true;
     this.input.enabled = false;
 
-    if (document.getElementById("pet-list-modal")) return;
+    const div = document.createElement("div");
+    div.id = "pet-list-modal";
+    document.body.appendChild(div);
 
-    const modalContainer = document.createElement("div");
-    modalContainer.id = "pet-list-modal";
-    document.body.appendChild(modalContainer);
+    const root = createRoot(div);
+    this.petListRoot = root;
 
     const closePetList = () => {
-      if (this.petListRoot) {
-        this.petListRoot.unmount();
-        this.petListRoot = null;
-      }
-      document.body.removeChild(modalContainer);
+      root.unmount();
+      div.remove();
       this.modalOpen = false;
       this.input.enabled = true;
     };
 
-    if (!this.petListRoot) {
-      this.petListRoot = createRoot(modalContainer);
-    }
+    window.api.loadGameFromDB().then((gameData) => {
+      const petList = gameData.petList || [];
 
-    this.petListRoot.render(
-      <PetListProvider>
-        <PetListModal itemsPerPage={3} onClose={closePetList} />
-      </PetListProvider>
-    );
+      root.render(
+        <PetListModal
+          petList={petList}
+          itemsPerPage={3}
+          onClose={closePetList}
+        />
+      );
+    });
   }
+
   public addPet(pet: { id: number; name: string; image: string }) {
     if (!this.petList.some((p) => p.id === pet.id)) {
       this.petList.push(pet);

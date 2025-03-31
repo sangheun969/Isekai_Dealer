@@ -1,33 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { getGameInstance } from "../organisms/gameInstance";
-import { usePetList } from "./PetListContext";
 
 interface Pet {
   id: number;
   name: string;
   image: string;
+  price: number;
 }
 
 interface PetListModalProps {
   itemsPerPage: number;
   onClose: () => void;
+  petList: Pet[];
+  forceReload?: boolean;
 }
 
 const PetListModal: React.FC<PetListModalProps> = ({
   itemsPerPage,
   onClose,
+  petList: propPetList,
+  forceReload = false,
 }) => {
+  const [petList, setPetList] = useState<Pet[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [selectedPetId, setSelectedPetId] = useState<number>(0);
-  const { petList } = usePetList();
+  const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
+  const prevPetCount = useRef(0);
 
   const defaultPet: Pet = {
     id: 0,
     name: "기본 고양이",
     image: "/images/main/cat1.png",
+    price: 0,
   };
 
-  const allPets = [defaultPet, ...petList];
+  const allPets = useMemo(() => [defaultPet, ...petList], [petList]);
+
   const startIndex = currentPage * itemsPerPage;
   const selectedPets = allPets.slice(startIndex, startIndex + itemsPerPage);
 
@@ -50,6 +57,10 @@ const PetListModal: React.FC<PetListModalProps> = ({
       setCurrentPage((prev) => prev - 1);
     }
   };
+  useEffect(() => {
+    console.log("📦 모달 열림 → 전달된 petList 사용");
+    setPetList(propPetList);
+  }, [propPetList]);
 
   return (
     <div
@@ -61,6 +72,7 @@ const PetListModal: React.FC<PetListModalProps> = ({
         style={{ pointerEvents: "auto" }}
       >
         <h2 className="text-2xl font-bold mb-4">🐾 보유한 펫 목록</h2>
+
         <div className="flex flex-col gap-4">
           {selectedPets.length > 0 ? (
             selectedPets.map((pet) => (

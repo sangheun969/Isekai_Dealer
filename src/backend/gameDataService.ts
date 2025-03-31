@@ -36,15 +36,21 @@ export const saveGameProgress = (
 ) => {
   return new Promise<void>((resolve, reject) => {
     db.run(
-      `INSERT INTO game_progress (id, money, items, customer_data) 
-       VALUES (1, ?, ?, ?) 
+      `INSERT INTO game_progress (id, money, items, customer_data, pet_list) 
+        VALUES (?, ?, ?, ?, ?) 
        ON CONFLICT(id) DO UPDATE 
        SET money = excluded.money, 
            items = excluded.items,
            customer_data = excluded.customer_data,
            pet_list = excluded.pet_list;`,
 
-      [money, JSON.stringify(items), JSON.stringify(customerData)],
+      [
+        1,
+        money,
+        JSON.stringify(items),
+        JSON.stringify(customerData),
+        JSON.stringify(petList),
+      ],
       (err) => {
         if (err) {
           console.error("❌ 게임 데이터 저장 실패:", err.message);

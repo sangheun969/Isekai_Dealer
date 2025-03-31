@@ -163,7 +163,6 @@ class GameScene extends phaser_1.default.Scene {
         return calculatedPrice;
     }
     setGameData(money, inventory, petList) {
-        console.log("🔄 [GameScene] 게임 데이터 설정 중...");
         this.money = money;
         this.inventory = inventory;
         this.petList = petList || [];
@@ -285,23 +284,17 @@ class GameScene extends phaser_1.default.Scene {
         }
         this.moneyText?.setText(`💰 ${this.money.toLocaleString()} 코인`);
         if (!this.dailyClientText || this.dailyClientText) {
-            console.warn("⚠️ dailyClientText가 존재하지 않거나 destroy됨. UI를 다시 생성합니다.");
             this.createDailyClientText();
         }
         this.dailyClientText?.setText(`${this.dailyClientCount}명/8`);
         if (this.petList.length > 0) {
-            console.log("🐾 펫 리스트 복구:", this.petList);
             this.selectedPet = this.petList[0];
         }
         else {
-            console.warn("⚠️ 보유한 펫이 없음.");
             this.selectedPet = { id: 0, name: "기본 고양이", image: "cat1" };
         }
         if (this.petImage && this.selectedPet?.image) {
             this.petImage.setTexture(this.selectedPet.image);
-        }
-        else {
-            console.warn("❌ petImage 또는 selectedPet.image가 존재하지 않습니다!", this.petImage, this.selectedPet);
         }
         if (!this.petImage) {
             this.petImage = this.add.image(100, 100, "defaultPet");
@@ -399,9 +392,6 @@ class GameScene extends phaser_1.default.Scene {
         }
         if (this.dailyClientText) {
             this.dailyClientText.setText(`${this.dailyClientCount}명/8`);
-        }
-        else {
-            console.warn("⚠️ dailyClientText가 존재하지 않아 업데이트할 수 없습니다.");
         }
     }
     cleanupUI() {
@@ -578,7 +568,7 @@ class GameScene extends phaser_1.default.Scene {
         this.currentClientGreedLevel = this.getRandomGreedLevel();
         const customerKey = `client${this.currentCustomerId}`;
         this.customer = this.add.image(width / 2, height + 220, customerKey);
-        this.customer.setScale(0.7).setDepth(4).setOrigin(0.5, 1);
+        this.customer.setScale(0.8).setDepth(4).setOrigin(0.5, 1);
         if (this.currentItemData) {
             this.loadItem(this.currentItemData);
             let minPercentage = 0.05;
@@ -606,8 +596,8 @@ class GameScene extends phaser_1.default.Scene {
                 Math.floor(phaser_1.default.Math.Between(minPrice, maxPrice) / 100) * 100;
         }
         this.speechBubble = this.add
-            .image(width / 3.6, height / 3 - 25, "speechBubble9")
-            .setScale(0.6)
+            .image(width / 5, height / 3 - 40, "speechBubble9")
+            .setScale(0.7)
             .setDepth(3)
             .setAlpha(1);
         this.speechBubble.setDisplaySize(this.speechBubble.width * 0.6, this.speechBubble.height * 0.3);
@@ -620,9 +610,9 @@ class GameScene extends phaser_1.default.Scene {
         ];
         const randomGreeting = greetingTexts[Math.floor(Math.random() * greetingTexts.length)];
         this.speechText = this.add
-            .text(width / 3.6, height / 3 - 40, randomGreeting, {
+            .text(width / 5, height / 3 - 40, randomGreeting, {
             fontFamily: "Arial",
-            fontSize: "22px",
+            fontSize: "24px",
             color: "#ffffff",
             wordWrap: { width: this.speechBubble.displayWidth * 0.7 },
             align: "center",
@@ -631,11 +621,11 @@ class GameScene extends phaser_1.default.Scene {
             .setDepth(7);
         this.incrementDailyClientCount();
         this.clearChoiceButtons();
-        const { buttonImage: buttonImage1, buttonText: buttonText1 } = this.createImageButtonWithText(width / 3.6, height / 1.5 - 100, "speechBubble8", "어떻게 하고 싶으시죠?", () => {
+        const { buttonImage: buttonImage1, buttonText: buttonText1 } = this.createImageButtonWithText(width / 5, height / 1.5 - 100, "speechBubble8", "어떻게 하고 싶으시죠?", () => {
             this.clearChoiceButtons();
             this.updateSpeechAndButtons();
         });
-        const { buttonImage: buttonImage2, buttonText: buttonText2 } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", "관심 없어요", () => {
+        const { buttonImage: buttonImage2, buttonText: buttonText2 } = this.createImageButtonWithText(width / 5, height / 1.5, "speechBubble8", "관심 없어요", () => {
             this.clearChoiceButtons();
             this.clearClientUI();
             const hasInventoryItems = this.inventory.length > 0;
@@ -717,8 +707,7 @@ class GameScene extends phaser_1.default.Scene {
             this.speechText.setText(`💰${this.suggestedPrice.toLocaleString()}코인에 팔고 싶습니다.`);
         }
         this.negotiationAttempts = Math.floor(Math.random() * 2) + 2;
-        console.log(`🔄 새로운 고객 등장! 협상 가능 횟수: ${this.negotiationAttempts}`);
-        const { buttonImage: buttonImage3, buttonText: buttonText3 } = this.createImageButtonWithText(width / 3.6, height / 1.5 - 100, "speechBubble8", "좋습니다.", () => {
+        const { buttonImage: buttonImage3, buttonText: buttonText3 } = this.createImageButtonWithText(width / 5, height / 1.5 - 100, "speechBubble8", "좋습니다.", () => {
             if (!this.selectedItemKey) {
                 console.warn("🚨 아이템이 선택되지 않았습니다.");
                 return;
@@ -737,11 +726,9 @@ class GameScene extends phaser_1.default.Scene {
                 this.cleanupUI();
                 const hasInventoryItems = this.inventory.length > 0;
                 if (hasInventoryItems && Math.random() < 0.5) {
-                    console.log("🛒 새로운 고객이 등장합니다: 아이템 구매자");
                     this.spawnBuyer();
                 }
                 else {
-                    console.log("🛍️ 새로운 고객이 등장합니다: 아이템 판매자");
                     this.spawnRandomCustomer();
                 }
             }
@@ -752,7 +739,7 @@ class GameScene extends phaser_1.default.Scene {
                 }
             }
         });
-        const { buttonImage: buttonImage4, buttonText: buttonText4 } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", "음..이 가격은 어떨까요?", () => {
+        const { buttonImage: buttonImage4, buttonText: buttonText4 } = this.createImageButtonWithText(width / 5, height / 1.5, "speechBubble8", "음..이 가격은 어떨까요?", () => {
             buttonImage4.destroy();
             buttonText4.destroy();
             const createInputField = (defaultValue = "") => {
@@ -819,7 +806,7 @@ class GameScene extends phaser_1.default.Scene {
                     });
                     let negotiationAttempts = 0;
                     let minAcceptablePrice = (0, priceEvaluation_1.getMinAcceptablePrice)(this.suggestedPrice, this.currentClientPersonality);
-                    const { buttonImage: buttonImage5, buttonText: buttonText5 } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", `제안 가격: ${price}코인`, () => {
+                    const { buttonImage: buttonImage5, buttonText: buttonText5 } = this.createImageButtonWithText(width / 5, height / 1.5, "speechBubble8", `제안 가격: ${price}코인`, () => {
                         let { response: responseText } = (0, priceEvaluation_1.getResponseText)(price, minAcceptablePrice, this.currentClientPersonality, this.suggestedPrice);
                         if (this.speechText) {
                             this.speechText.setText(responseText);
@@ -843,13 +830,13 @@ class GameScene extends phaser_1.default.Scene {
                             if (reinputButton) {
                                 reinputButton.setVisible(false);
                             }
-                            const { buttonImage: yesButton, buttonText: yesText } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", "예", () => {
+                            const { buttonImage: yesButton, buttonText: yesText } = this.createImageButtonWithText(width / 5, height / 1.5, "speechBubble8", "예", () => {
                                 if (this.speechText) {
                                     this.speechText.setText("음..알겠습니다.");
                                 }
                                 yesButton.destroy();
                                 yesText.destroy();
-                                const { buttonImage: confirmButton, buttonText: confirmText, } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", "좋습니다.", () => {
+                                const { buttonImage: confirmButton, buttonText: confirmText, } = this.createImageButtonWithText(width / 5, height / 1.5, "speechBubble8", "좋습니다.", () => {
                                     if (!this.selectedItemKey) {
                                         console.warn("🚨 아이템이 선택되지 않았습니다.");
                                         return;
@@ -859,7 +846,6 @@ class GameScene extends phaser_1.default.Scene {
                                     this.todayPurchaseCount++;
                                     if (this.money >= finalPrice) {
                                         this.money -= finalPrice;
-                                        console.log(`💰 ${this.money.toLocaleString()} 코인 남음`);
                                         if (this.moneyText) {
                                             this.moneyText.setText(`💰 ${this.money.toLocaleString()} 코인`);
                                         }
@@ -905,7 +891,7 @@ class GameScene extends phaser_1.default.Scene {
                             if (this.negotiationAttempts <= 0) {
                                 console.log("❌ 최대 협상 횟수 도달! 협상 종료");
                                 this.speechText?.setText("그만하죠. 이 가격으로는 거래할 수 없습니다.");
-                                const { buttonImage: endButton, buttonText: endText } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", "다음 고객", () => {
+                                const { buttonImage: endButton, buttonText: endText } = this.createImageButtonWithText(width / 5, height / 1.5, "speechBubble8", "다음 고객", () => {
                                     endButton.destroy();
                                     endText.destroy();
                                     this.cleanupUI();
@@ -1023,7 +1009,7 @@ class GameScene extends phaser_1.default.Scene {
         }
         const clientNumber = Math.floor(Math.random() * 14) + 1;
         this.customer = this.add.image(width / 2, height + 220, `client${clientNumber}`);
-        this.customer.setScale(0.7).setDepth(4).setOrigin(0.5, 1);
+        this.customer.setScale(0.8).setDepth(4).setOrigin(0.5, 1);
         this.currentClientGreedLevel = this.getRandomGreedLevel();
         const randomItemIndex = Math.floor(Math.random() * this.inventory.length);
         this.selectedItem = this.inventory[randomItemIndex];
@@ -1046,13 +1032,13 @@ class GameScene extends phaser_1.default.Scene {
             this.openItemPurchaseModal(this.selectedItem, purchasePrice, originalPrice);
         });
         this.speechBubble = this.add
-            .image(width / 3.6, height / 3 - 25, "speechBubble9")
+            .image(width / 5, height / 3 - 25, "speechBubble9")
             .setScale(0.6)
             .setDepth(3)
             .setAlpha(1);
         this.speechBubble.setDisplaySize(this.speechBubble.width * 0.6, this.speechBubble.height * 0.3);
         this.speechText = this.add
-            .text(width / 3.6, height / 3 - 40, `이 물건을 사고 싶은데, ${purchasePrice.toLocaleString()} 코인 이정도면 괜찮은가?`, {
+            .text(width / 5, height / 3 - 40, `이 물건을 사고 싶은데, ${purchasePrice.toLocaleString()} 코인 이정도면 괜찮은가?`, {
             fontSize: "20px",
             color: "#fffafa",
             fontFamily: "Arial",
@@ -1140,8 +1126,8 @@ class GameScene extends phaser_1.default.Scene {
     }
     setupNegotiationButtons(speechTextY, confirmedPrice) {
         const { width, height } = this.scale;
-        const { buttonImage: buttonImage6, buttonText: buttonText6 } = this.createImageButtonWithText(width / 3.6, height / 1.5 - 100, "speechBubble8", "좋습니다.", this.createConfirmButtonCallback(confirmedPrice));
-        const { buttonImage: buttonImage7, buttonText: buttonText7 } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", "재협상을 하시죠.", () => {
+        const { buttonImage: buttonImage6, buttonText: buttonText6 } = this.createImageButtonWithText(width / 5, height / 1.5 - 100, "speechBubble8", "좋습니다.", this.createConfirmButtonCallback(confirmedPrice));
+        const { buttonImage: buttonImage7, buttonText: buttonText7 } = this.createImageButtonWithText(width / 5, height / 1.5, "speechBubble8", "재협상을 하시죠.", () => {
             this.negotiationAttempts++;
             buttonImage6.setVisible(false);
             buttonText6.setVisible(false);
@@ -1250,7 +1236,6 @@ class GameScene extends phaser_1.default.Scene {
                     if (price < this.purchasePrice) {
                         warningMessage.style.display = "block";
                         if (document.body.contains(warningMessage)) {
-                            console.log("✅ warningMessage DOM에 존재함");
                             warningMessage.style.display = "block";
                         }
                         else {
@@ -1275,7 +1260,7 @@ class GameScene extends phaser_1.default.Scene {
                             document.body.removeChild(warningMessage);
                         }
                         inputBg.setVisible(false);
-                        const { buttonImage: yesButton, buttonText: yesText } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", `${price.toLocaleString()}코인에 해드리겠습니다.`, () => {
+                        const { buttonImage: yesButton, buttonText: yesText } = this.createImageButtonWithText(width / 5, height / 1.5, "speechBubble8", `${price.toLocaleString()}코인에 해드리겠습니다.`, () => {
                             const minPurchasePrice = (0, priceEvaluation_1.getMinPurchasePrice)(this.suggestedPrice, this.currentClientPersonality);
                             const maxMultipliers = {
                                 호구: 2.5,
@@ -1328,7 +1313,7 @@ class GameScene extends phaser_1.default.Scene {
                             if (isFinal) {
                                 this.yesButton?.destroy();
                                 this.yesText?.destroy();
-                                const { buttonImage: confirmButton, buttonText: confirmText, } = this.createImageButtonWithText(width / 3.6, height / 1.5, "speechBubble8", "판매하기", () => {
+                                const { buttonImage: confirmButton, buttonText: confirmText, } = this.createImageButtonWithText(width / 5, height / 1.5, "speechBubble8", "판매하기", () => {
                                     if (this.moneyImage) {
                                         this.moneyImage.destroy();
                                         this.moneyImage = null;
@@ -1364,7 +1349,7 @@ class GameScene extends phaser_1.default.Scene {
             };
             createInputField();
         });
-        const { buttonImage: buttonImage8, buttonText: buttonText8 } = this.createImageButtonWithText(width / 3.6, height / 1.5 + 100, "speechBubble8", "안팝니다.", () => {
+        const { buttonImage: buttonImage8, buttonText: buttonText8 } = this.createImageButtonWithText(width / 5, height / 1.5 + 100, "speechBubble8", "안팝니다.", () => {
             if (this.moneyImage) {
                 this.moneyImage.destroy();
                 this.moneyImage = null;
@@ -1474,17 +1459,13 @@ class GameScene extends phaser_1.default.Scene {
     }
     resetDailyClientText() {
         if (!this.cameras || !this.cameras.main) {
-            console.warn("🚨 [resetDailyClientText] cameras.main이 아직 초기화되지 않았습니다!");
             return;
         }
         const width = this.cameras.main.width;
-        console.log("🔄 [GameScene] dailyClientText 초기화 시작...");
         if (this.dailyClientText) {
-            console.log("♻️ 기존 dailyClientText 재활용");
             this.dailyClientText.setText(`${this.dailyClientCount}명/8`);
         }
         else {
-            console.warn("⚠️ dailyClientText가 존재하지 않음. 새로 생성합니다.");
             this.dailyClientText = this.add
                 .text(width - 140, 90, `${this.dailyClientCount}명/8`, {
                 fontSize: "28px",
@@ -1497,14 +1478,11 @@ class GameScene extends phaser_1.default.Scene {
         console.log("✅ dailyClientText가 정상적으로 갱신됨:", this.dailyClientText.text);
     }
     refreshUI() {
-        console.log("🔄 [GameScene] UI 다시 그리는 중...");
         if (!this.scene.isActive()) {
-            console.warn("⚠️ [GameScene] 활성화되지 않음. UI 업데이트 건너뜀.");
             return;
         }
         this.updateUI();
         if (!this.client) {
-            console.warn("⚠️ 클라이언트가 없음. 새 클라이언트 생성");
             if (this.inventory.length > 0 && Math.random() < 0.4) {
                 this.spawnBuyer();
             }
@@ -1513,42 +1491,16 @@ class GameScene extends phaser_1.default.Scene {
             }
         }
         if (!this.speechBubble8) {
-            console.warn("⚠️ speechBubble8 없음. 새로 추가.");
             this.speechBubble8 = this.add
                 .image(400, 300, "speechBubble8")
                 .setDepth(10);
         }
         if (!this.speechBubble9) {
-            console.warn("⚠️ speechBubble9 없음. 새로 추가.");
             this.speechBubble9 = this.add
                 .image(600, 300, "speechBubble9")
                 .setDepth(10);
         }
         console.log("✅ [GameScene] refreshUI 완료.");
-    }
-    displayInventoryItems() {
-        console.log("📦 [GameScene] 인벤토리 UI 업데이트 중...");
-        if (!this.itemDisplayGroup) {
-            this.itemDisplayGroup = this.add.group();
-        }
-        else {
-            this.itemDisplayGroup.clear(true, true);
-        }
-        if (this.inventory.length === 0) {
-            console.warn("⚠️ [GameScene] 인벤토리에 아이템이 없음.");
-            return;
-        }
-        this.inventory.forEach((item, index) => {
-            const xPos = 100 + index * 100;
-            const yPos = this.scale.height - 150;
-            const itemSprite = this.add.sprite(xPos, yPos, item.image);
-            itemSprite.setScale(0.5).setInteractive();
-            itemSprite.on("pointerdown", () => {
-                console.log(`🛍️ [GameScene] 아이템 선택됨: ${item.name}`);
-            });
-            this.itemDisplayGroup?.add(itemSprite);
-        });
-        console.log("✅ [GameScene] 인벤토리 UI 갱신 완료.");
     }
 }
 exports.default = GameScene;

@@ -15,8 +15,14 @@ const App = () => {
     (0, react_1.useEffect)(() => {
         const config = {
             type: phaser_1.default.AUTO,
-            width: window.innerWidth,
-            height: window.innerHeight,
+            width: 1920,
+            height: 1080,
+            scale: {
+                mode: phaser_1.default.Scale.FIT,
+                autoCenter: phaser_1.default.Scale.CENTER_BOTH,
+                width: 1920,
+                height: 1080,
+            },
             scene: [BootScene_1.default, Scenes_1.default, StoryScene_1.default, GameScene_1.default],
             parent: "phaser-game-container",
             audio: {

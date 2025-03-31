@@ -5,9 +5,8 @@ import Scenes from "./game/Scenes";
 import StoryScene from "./game/StoryScene";
 import GameScene from "./game/GameScene";
 import { setGameInstance } from "./components/organisms/gameInstance";
-import { PetListProvider } from "./components/templates/PetListContext";
 
-const App = () => {
+const App: React.FC = () => {
   useEffect(() => {
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
@@ -37,11 +36,7 @@ const App = () => {
     };
   }, []);
 
-  return (
-    <PetListProvider>
-      <div id="phaser-game-container" className="w-full h-screen" />
-    </PetListProvider>
-  );
+  return <div id="phaser-game-container" className="w-full h-screen" />;
 };
 
 export default App;
