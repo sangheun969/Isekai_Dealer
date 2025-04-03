@@ -15,7 +15,7 @@ interface PetShopModalProps {
 
 const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
   const [money, setMoney] = useState<number | null>(null);
-  const [petList, setPetList] = useState<Pet[]>([]); // ✅ 로컬 상태에서만 사용
+  const [petList, setPetList] = useState<Pet[]>([]);
 
   const petStoreList: Pet[] = [
     {
@@ -31,7 +31,6 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
       price: 7000,
     },
   ];
-
   useEffect(() => {
     const gameScene = getGameInstance();
     if (gameScene) {
@@ -40,11 +39,14 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
       });
     }
 
-    // 💾 DB에서 기존 펫 리스트 불러오기
     const fetchPetList = async () => {
       try {
         const gameData = await window.api.loadGameFromDB();
-        setPetList(gameData.petList || []);
+        const loadedPetList = Array.isArray(gameData.petList)
+          ? gameData.petList
+          : [];
+
+        setPetList(loadedPetList);
       } catch (err) {
         console.error("❌ 펫 리스트 로드 실패:", err);
       }
@@ -63,7 +65,7 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
     if (!gameScene) return;
 
     const updatedMoney = money - pet.price;
-    const updatedPetList = [...petList, pet];
+    const updatedPetList = [...(petList || []), pet];
 
     try {
       const gameData = await window.api.loadGameFromDB();

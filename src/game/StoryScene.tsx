@@ -8,14 +8,17 @@ export default class StoryScene extends Phaser.Scene {
   private storyData2 = storyData2;
   private currentCharacterImage: Phaser.GameObjects.Image | null = null;
   private dialogueTextBelow: Phaser.GameObjects.Text | null = null;
-  private dialogueBox: Phaser.GameObjects.Graphics | null = null;
+  private dialogueBox:
+    | Phaser.GameObjects.Graphics
+    | Phaser.GameObjects.Image
+    | null = null;
   private speechBubble: Phaser.GameObjects.Image | null = null;
   private speechBubble2: Phaser.GameObjects.Image | null = null;
   private characterNameText: Phaser.GameObjects.Text | null = null;
   private gauntletItemImage: Phaser.GameObjects.Image | null = null;
   private gameObject: Phaser.GameObjects.Image | null = null;
   private background: Phaser.GameObjects.Image | null = null;
-
+  private typingTimer?: Phaser.Time.TimerEvent;
   constructor() {
     super({ key: "StoryScene" });
   }
@@ -27,9 +30,10 @@ export default class StoryScene extends Phaser.Scene {
     this.load.image("table1", "/images/background/table1.png");
     this.load.image("frontmen3", "/images/npc/frontmen3.png");
     this.load.image("speechBubble9", "/images/background/speechBubble9.png");
+    this.load.image("speechBubble2", "/images/background/speechBubble2.png");
     this.load.image("speechBubble8", "/images/background/speechBubble8.png");
 
-    this.load.image("speechBubble2", "/images/background/speechBubble6.png");
+    this.load.image("speechBubble6", "/images/background/speechBubble6.png");
     this.load.image("gauntletItem", "images/items/gauntletItem1.png");
     this.load.audio("buttonClick", "/audios/Button1.mp3");
   }
@@ -91,20 +95,20 @@ export default class StoryScene extends Phaser.Scene {
     }
 
     this.speechBubble = this.add
-      .image(width / 3.6, height / 3 - 25, "speechBubble9")
-      .setScale(0.6)
+      .image(width / 5, height / 3 - 40, "speechBubble9")
+      .setScale(0.9)
       .setDepth(3)
       .setAlpha(0);
 
     if (this.speechBubble) {
       this.speechBubble.setDisplaySize(
         this.speechBubble.width * 0.6,
-        this.speechBubble.height * 0.3
+        this.speechBubble.height * 0.4
       );
     }
 
     this.speechBubble2 = this.add
-      .image(width / 7, height / 7.5, "speechBubble2")
+      .image(width / 5, height / 7.5, "speechBubble6")
       .setScale(0.2)
       .setDepth(3)
       .setAlpha(0);
@@ -208,69 +212,37 @@ export default class StoryScene extends Phaser.Scene {
     }
 
     if (currentStory2) {
-      const boxWidth = width * 0.2;
-      const boxHeight = 90;
       const boxX = width / 5;
-      const boxY = height / 1.5 - 100;
+      const boxY = height / 1.5;
 
       if (this.dialogueTextBelow) {
         this.dialogueTextBelow.destroy();
       }
 
-      this.dialogueTextBelow = this.add.text(
-        boxX + boxWidth / 2,
-        boxY + boxHeight / 2,
-        currentStory2.text,
-        {
+      if (this.dialogueBox) {
+        this.dialogueBox.destroy();
+      }
+
+      this.dialogueBox = this.add
+        .image(boxX, boxY, "speechBubble2")
+        .setDepth(3)
+        .setAlpha(0.9)
+        .setScale(0.6, 0.3)
+        .setInteractive({ useHandCursor: true });
+
+      this.dialogueTextBelow = this.add
+        .text(boxX, boxY, currentStory2.text, {
           fontFamily: "GowunDodum",
-          fontSize: "18px",
+          fontSize: "30px",
           color: "#000000",
-          wordWrap: { width: boxWidth * 0.8 },
+          wordWrap: {
+            width: this.dialogueBox.displayWidth * 0.9,
+          },
           align: "center",
-          padding: { top: 5, bottom: 5 },
-        }
-      );
-      this.dialogueTextBelow.setOrigin(0.5).setDepth(12);
-
-      // 버튼
-      this.dialogueBox = this.add.graphics();
-      this.dialogueBox.fillStyle(0xffffff, 1);
-      this.dialogueBox.fillRoundedRect(
-        boxX - 2,
-        boxY - 2,
-        boxWidth + 4,
-        boxHeight,
-        15
-      );
-
-      this.dialogueBox.setInteractive(
-        new Phaser.Geom.Rectangle(boxX, boxY, boxWidth, boxHeight),
-        Phaser.Geom.Rectangle.Contains
-      );
-
-      this.dialogueBox.on("pointerover", () => {
-        this.dialogueBox?.clear();
-        this.dialogueBox?.fillStyle(0xffcccc, 1);
-        this.dialogueBox?.fillRoundedRect(
-          boxX - 2,
-          boxY - 2,
-          boxWidth + 4,
-          boxHeight,
-          15
-        );
-      });
-
-      this.dialogueBox.on("pointerout", () => {
-        this.dialogueBox?.clear();
-        this.dialogueBox?.fillStyle(0xffffff, 1);
-        this.dialogueBox?.fillRoundedRect(
-          boxX - 2,
-          boxY - 2,
-          boxWidth + 4,
-          boxHeight,
-          15
-        );
-      });
+        })
+        .setOrigin(0.5)
+        .setDepth(15)
+        .setAlpha(0.95);
 
       this.dialogueBox.on("pointerdown", () => {
         let effectSound = this.registry.get("buttonClick") as
@@ -280,6 +252,7 @@ export default class StoryScene extends Phaser.Scene {
           effectSound = this.sound.add("buttonClick", { volume: 0.5 });
           this.registry.set("buttonClick", effectSound);
         }
+
         const effectVolume = this.registry.get("effectVolume") as
           | number
           | undefined;
@@ -289,6 +262,7 @@ export default class StoryScene extends Phaser.Scene {
         ) {
           effectSound.setVolume(effectVolume);
         }
+
         effectSound.play();
         this.advanceStory(speechBubble);
       });
@@ -429,7 +403,7 @@ export default class StoryScene extends Phaser.Scene {
     });
     if (!this.speechBubble) {
       this.speechBubble = this.add
-        .image(width / 4, height / 3.5, "speechBubble8")
+        .image(width / 5, height / 3.5, "speechBubble8")
         .setScale(0.8)
         .setDepth(10)
         .setAlpha(0);

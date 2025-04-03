@@ -58,8 +58,58 @@ const PetListModal: React.FC<PetListModalProps> = ({
     }
   };
   useEffect(() => {
-    console.log("📦 모달 열림 → 전달된 petList 사용");
-    setPetList(propPetList);
+    const updatedPetList = propPetList.length > 0 ? propPetList : [];
+    setPetList(updatedPetList);
+
+    const fetchAndSetSelectedPet = async () => {
+      const gameScene = getGameInstance();
+      if (!gameScene || !gameScene.scene.isActive()) return;
+
+      const currentSelected = gameScene.getSelectedPet();
+
+      if (currentSelected) {
+        setSelectedPetId(currentSelected.id);
+        gameScene.setSelectedPet(currentSelected);
+      } else if (updatedPetList.length > 0) {
+        setSelectedPetId(updatedPetList[0].id);
+        gameScene.setSelectedPet(updatedPetList[0]);
+      } else {
+        setSelectedPetId(defaultPet.id);
+        gameScene.setSelectedPet(defaultPet);
+      }
+    };
+
+    fetchAndSetSelectedPet();
+
+    const handlePetListUpdate = async () => {
+      try {
+        const gameData = await window.api.loadGameFromDB();
+        const updatedList = gameData.petList || [];
+        setPetList(updatedList);
+
+        const gameScene = getGameInstance();
+        if (!gameScene || !gameScene.scene.isActive()) return;
+
+        const currentSelected = gameScene.getSelectedPet();
+        const found = updatedList.find((p) => p.id === currentSelected?.id);
+
+        if (found) {
+          setSelectedPetId(found.id);
+        } else {
+          const lastPet = updatedList[updatedList.length - 1];
+          setSelectedPetId(lastPet.id);
+          gameScene.setSelectedPet(lastPet);
+        }
+      } catch (err) {
+        console.error("❌ 펫 리스트 재로드 실패:", err);
+      }
+    };
+
+    window.addEventListener("petListUpdated", handlePetListUpdate);
+
+    return () => {
+      window.removeEventListener("petListUpdated", handlePetListUpdate);
+    };
   }, [propPetList]);
 
   return (
