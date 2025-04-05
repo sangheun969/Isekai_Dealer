@@ -17,7 +17,6 @@ export default class Scenes extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("background", "/images/main/mainPage.png");
     this.load.audio("buttonClick", "/audios/Button1.mp3");
     this.load.image("playBtn2", "/images/main/playBtn2.png");
     this.load.image("playBtn3", "/images/main/playBtn3.png");
@@ -88,73 +87,71 @@ export default class Scenes extends Phaser.Scene {
   updateUI() {
     const width = this.scale.width;
     const height = this.scale.height;
+    const video = this.add.video(0, 0, "");
+    video.loadURL("/video/videoBg2.mp4");
+    video.setDisplaySize(width / 7.5, height / 4);
+    video.setOrigin(0, 0);
+    video.play(false);
 
-    if (this.background) {
-      this.background.setDisplaySize(width, height).setPosition(0, 0);
-    } else {
-      this.background = this.add
-        .image(0, 0, "background")
-        .setOrigin(0, 0)
-        .setDisplaySize(width, height);
-    }
+    const centerX = width / 2;
+    const startY = height * 0.45;
+    const buttonGap = 150;
 
     const buttonScale = width / 1920;
 
     if (this.startButton) {
-      this.startButton
-        .setPosition(width * 0.1, height * 0.1)
-        .setScale(0.3 * buttonScale);
+      this.startButton.setPosition(centerX, startY).setScale(0.4 * buttonScale);
     } else {
       this.startButton = this.add
-        .image(width * 0.1, height * 0.1, "playBtn2")
+        .image(centerX, startY, "playBtn2")
         .setInteractive()
-        .setOrigin(0, 0)
-        .setScale(0.3 * buttonScale);
+        .setOrigin(0.5)
+        .setScale(0.4 * buttonScale);
     }
 
     if (this.loadButton) {
       this.loadButton
-        .setPosition(width * 0.1, height * 0.3)
-        .setScale(0.3 * buttonScale);
+        .setPosition(centerX, startY + buttonGap)
+        .setScale(0.4 * buttonScale);
     } else {
       this.loadButton = this.add
-        .image(width * 0.1, height * 0.3, "playBtn3")
+        .image(centerX, startY + buttonGap, "playBtn3")
         .setInteractive()
-        .setOrigin(0, 0)
-        .setScale(0.3 * buttonScale);
+        .setOrigin(0.5)
+        .setScale(0.4 * buttonScale);
     }
 
     if (this.settingsButton) {
       this.settingsButton
-        .setPosition(width * 0.1, height * 0.5)
-        .setScale(0.3 * buttonScale);
+        .setPosition(centerX, startY + buttonGap * 2)
+        .setScale(0.4 * buttonScale);
     } else {
       this.settingsButton = this.add
-        .image(width * 0.1, height * 0.5, "playBtn4")
+        .image(centerX, startY + buttonGap * 2, "playBtn4")
         .setInteractive()
-        .setOrigin(0, 0)
-        .setScale(0.3 * buttonScale);
+        .setOrigin(0.5)
+        .setScale(0.4 * buttonScale);
     }
 
     this.startButton.on("pointerover", () =>
-      this.startButton.setScale(0.35 * buttonScale)
+      this.startButton.setScale(0.45 * buttonScale)
     );
     this.startButton.on("pointerout", () =>
-      this.startButton.setScale(0.3 * buttonScale)
+      this.startButton.setScale(0.4 * buttonScale)
     );
 
     this.loadButton.on("pointerover", () =>
-      this.loadButton.setScale(0.35 * buttonScale)
+      this.loadButton.setScale(0.45 * buttonScale)
     );
     this.loadButton.on("pointerout", () =>
-      this.loadButton.setScale(0.3 * buttonScale)
+      this.loadButton.setScale(0.4 * buttonScale)
     );
 
     this.settingsButton.on("pointerover", () =>
-      this.settingsButton.setScale(0.35 * buttonScale)
+      this.settingsButton.setScale(0.45 * buttonScale)
     );
     this.settingsButton.on("pointerout", () =>
-      this.settingsButton.setScale(0.3 * buttonScale)
+      this.settingsButton.setScale(0.4 * buttonScale)
     );
   }
 

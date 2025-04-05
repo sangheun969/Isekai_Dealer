@@ -6,6 +6,8 @@ interface Pet {
   name: string;
   image: string;
   price: number;
+  showGreedLevel?: boolean;
+  description?: string;
 }
 
 interface PetListModalProps {
@@ -31,6 +33,8 @@ const PetListModal: React.FC<PetListModalProps> = ({
     name: "기본 고양이",
     image: "/images/main/cat1.png",
     price: 0,
+    showGreedLevel: false,
+    description: "성격을 알 수 있는 고양이",
   };
 
   const allPets = useMemo(() => [defaultPet, ...petList], [petList]);
@@ -139,6 +143,11 @@ const PetListModal: React.FC<PetListModalProps> = ({
                   className="w-26 h-24 rounded-md"
                 />
                 <span className="font-semibold">{pet.name}</span>
+                {pet.description && (
+                  <span className="text-sm text-gray-600 mt-1">
+                    {pet.description}
+                  </span>
+                )}
               </button>
             ))
           ) : (

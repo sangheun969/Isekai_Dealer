@@ -26,9 +26,9 @@ export default class StoryScene extends Phaser.Scene {
   preload() {
     this.load.image("pawnShopBackground2", "/images/background/storeBg1.png");
     this.load.image("pawnShopBackground3", "/images/background/storeBg5.png");
-    this.load.image("master", "/images/main/master3.png");
+    this.load.image("master", "/images/main/master4.png");
     this.load.image("table1", "/images/background/table1.png");
-    this.load.image("frontmen3", "/images/npc/frontmen3.png");
+    this.load.image("frontmen3", "/images/npc/frontmen4.png");
     this.load.image("speechBubble9", "/images/background/speechBubble9.png");
     this.load.image("speechBubble2", "/images/background/speechBubble2.png");
     this.load.image("speechBubble8", "/images/background/speechBubble8.png");
@@ -107,11 +107,11 @@ export default class StoryScene extends Phaser.Scene {
       );
     }
 
-    this.speechBubble2 = this.add
-      .image(width / 5, height / 7.5, "speechBubble6")
-      .setScale(0.2)
-      .setDepth(3)
-      .setAlpha(0);
+    // this.speechBubble2 = this.add
+    //   .image(width / 2, height / 4.5, "speechBubble6")
+    //   .setScale(0.2)
+    //   .setDepth(3)
+    //   .setAlpha(0);
 
     this.gameObject = this.add
       .image(width, height, "exampleImage")
@@ -136,6 +136,7 @@ export default class StoryScene extends Phaser.Scene {
       console.warn("🚨 [StoryScene] cameras.main이 초기화되지 않음!");
       return;
     }
+
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
@@ -156,72 +157,54 @@ export default class StoryScene extends Phaser.Scene {
       currentStory.text || "",
       {
         fontFamily: "GowunDodum",
-        fontSize: "25px",
+        fontSize: "32px",
         color: "#ffffff",
         wordWrap: { width: speechBubble.displayWidth * 0.7 },
-        align: "center",
+        align: "left",
         padding: { top: 10, bottom: 10 },
       }
     );
     dialogueTextTop.setOrigin(0.5).setDepth(11);
 
     if (currentStory.item === "gauntletItem") {
-      if (this.gauntletItemImage) {
-        this.gauntletItemImage.setAlpha(1);
-      }
+      this.gauntletItemImage?.setAlpha(1);
     } else {
-      if (this.gauntletItemImage) {
-        this.gauntletItemImage.setAlpha(0);
-      }
+      this.gauntletItemImage?.setAlpha(0);
     }
 
     if (currentStory.image) {
       this.showCharacterImage(currentStory.image);
-      if (
-        currentStory.image === "frontmen3" ||
-        currentStory.image === "master"
-      ) {
-        this.speechBubble2?.setAlpha(1);
-        if (currentStory.name) {
-          if (this.characterNameText) {
-            this.characterNameText.destroy();
-          }
-          this.characterNameText = this.add
-            .text(
-              this.speechBubble2!.x,
-              this.speechBubble2!.y - this.speechBubble2!.displayHeight * 0.01,
-              currentStory.name,
-              {
-                fontFamily: "GowunDodum",
-                fontSize: "20px",
-                color: "#000000",
-                fontStyle: "bold",
-                align: "center",
-                padding: { top: 10, bottom: 10 },
-              }
-            )
-            .setOrigin(0.5)
-            .setDepth(12);
-        } else if (this.characterNameText) {
+
+      if (currentStory.name) {
+        if (this.characterNameText) {
           this.characterNameText.destroy();
-          this.characterNameText = null;
         }
-      } else {
-        this.speechBubble2?.setAlpha(0);
+        this.characterNameText = this.add
+          .text(width / 2, height * 0.2, currentStory.name, {
+            fontFamily: "GowunDodum",
+            fontSize: "24px",
+            color: "#001380",
+            fontStyle: "bold",
+            align: "center",
+          })
+          .setOrigin(0.5)
+          .setDepth(12);
+      } else if (this.characterNameText) {
+        this.characterNameText.destroy();
+        this.characterNameText = null;
       }
+    } else if (this.characterNameText) {
+      this.characterNameText.destroy();
+      this.characterNameText = null;
     }
 
+    // 하단 텍스트 박스와 대사
     if (currentStory2) {
       const boxX = width / 5;
       const boxY = height / 1.5;
 
-      if (this.dialogueTextBelow) {
-        this.dialogueTextBelow.destroy();
-      }
-
-      if (this.dialogueBox) {
-        this.dialogueBox.destroy();
-      }
+      this.dialogueTextBelow?.destroy();
+      this.dialogueBox?.destroy();
 
       this.dialogueBox = this.add
         .image(boxX, boxY, "speechBubble2")
@@ -268,6 +251,7 @@ export default class StoryScene extends Phaser.Scene {
       });
     }
   }
+
   changeBackground(newBackgroundKey: string) {
     if (this.background) {
       this.background.setTexture(newBackgroundKey);
@@ -389,7 +373,7 @@ export default class StoryScene extends Phaser.Scene {
 
     this.currentCharacterImage = this.add.image(
       width / 2,
-      height / 1.8,
+      height / 1.5,
       imageKey
     );
     this.currentCharacterImage.setAlpha(0).setDepth(1).setScale(0.7);

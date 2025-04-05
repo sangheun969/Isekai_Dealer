@@ -11,6 +11,7 @@ interface Pet {
   name: string;
   image: string;
   price: number;
+  description?: string;
 }
 
 interface PetListContextType {
@@ -26,7 +27,6 @@ export const PetListProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [petList, setPetList] = useState<Pet[]>([]);
 
-  // 💾 로컬스토리지에서 초기값 불러오기 (선택사항)
   useEffect(() => {
     const stored = localStorage.getItem("petList");
     if (stored) {
@@ -38,7 +38,6 @@ export const PetListProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, []);
 
-  // 🧠 펫 추가 함수
   const addPet = (pet: Pet) => {
     setPetList((prevList) => {
       const updated = [...prevList, pet];

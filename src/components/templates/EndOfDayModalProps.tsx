@@ -8,6 +8,7 @@ interface EndOfDayModalProps {
   purchaseCount: number;
   salesCount: number;
   revenue: number;
+  onNextDay: () => void;
   onClose: () => void;
 }
 
@@ -17,6 +18,7 @@ const EndOfDayModal: React.FC<EndOfDayModalProps> = ({
   purchaseCount,
   salesCount,
   revenue,
+  onNextDay,
   onClose,
 }) => {
   const [showNoticeboard, setShowNoticeboard] = useState(false);
@@ -35,8 +37,6 @@ const EndOfDayModal: React.FC<EndOfDayModalProps> = ({
             backgroundImage: `url(/images/background/bulletinboard.png)`,
           }}
         >
-          <h2 className="text-2xl font-bold text-white mb-6">📋 게시판</h2>
-
           <div className="mx-auto space-y-6">
             <div className="flex justify-around">
               <button
@@ -63,7 +63,10 @@ const EndOfDayModal: React.FC<EndOfDayModalProps> = ({
             </div>
             <button
               className="absolute bottom-6 left-1/2 transform -translate-x-1/2 border px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
-              onClick={onClose}
+              onClick={() => {
+                onNextDay();
+                onClose();
+              }}
             >
               다음
             </button>
@@ -75,13 +78,22 @@ const EndOfDayModal: React.FC<EndOfDayModalProps> = ({
           )}
         </div>
       ) : (
-        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-          <h2 className="text-2xl font-bold mb-4">📊 하루 매출 정산</h2>
-          <p>🛍️ 총 구매 금액: {purchases.toLocaleString()} 코인</p>
-          <p>💰 총 판매 금액: {sales.toLocaleString()} 코인</p>
-          <p>📦 구매한 아이템 개수: {purchaseCount}개</p>
-          <p>🏪 판매한 아이템 개수: {salesCount}개</p>
-          <p className="text-xl font-bold mt-4">
+        <div
+          className="w-[80%] h-[80%] p-40 rounded-lg shadow-lg  bg-cover flex flex-col "
+          style={{
+            backgroundImage: 'url("/images/background/status2.png")',
+          }}
+        >
+          <h2 className="text-4xl font-bold mb-4">📊 하루 매출 정산</h2>
+          <p className="text-2xl">
+            🛍️ 총 구매 금액: {purchases.toLocaleString()} 코인
+          </p>
+          <p className="text-2xl">
+            💰 총 판매 금액: {sales.toLocaleString()} 코인
+          </p>
+          <p className="text-2xl">📦 구매한 아이템 개수: {purchaseCount}개</p>
+          <p className="text-2xl">🏪 판매한 아이템 개수: {salesCount}개</p>
+          <p className="text-4xl font-bold mt-4">
             💵 오늘의 매출: {revenue.toLocaleString()} 코인
           </p>
           <button

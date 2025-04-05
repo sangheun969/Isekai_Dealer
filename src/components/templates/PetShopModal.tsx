@@ -6,6 +6,8 @@ interface Pet {
   name: string;
   image: string;
   price: number;
+  showGreedLevel?: boolean;
+  description?: string;
 }
 
 interface PetShopModalProps {
@@ -23,12 +25,25 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
       name: "객관안 앵무새",
       image: "/images/main/pet2_1.png",
       price: 5000,
+      showGreedLevel: true,
+      description: "손님의 욕심 수치를 볼 수 있는 능력을 가진 앵무새입니다.",
     },
     {
       id: 2,
       name: "귀여운 고양이",
       image: "/images/main/pet3_1.png",
       price: 7000,
+      showGreedLevel: true,
+      description: "손님의 욕심 수치를 볼 수 있는 능력을 가진 앵무새입니다.",
+    },
+    {
+      id: 3,
+      name: "꼬마 용",
+      image: "/images/main/pet4_1.png",
+      price: 7000,
+      showGreedLevel: false,
+      description:
+        "성격 파악 능력은 없지만 귀여움으로 가게 분위기를 살려줍니다.",
     },
   ];
   useEffect(() => {
@@ -95,7 +110,7 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
 
   return (
     <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-[400px]">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-[600px]">
         <h2 className="text-2xl font-bold mb-4">🐾 펫 상점</h2>
 
         <p className="text-lg font-semibold mb-4">
@@ -111,15 +126,18 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
               <img
                 src={pet.image}
                 alt={pet.name}
-                className="w-20 h-20 rounded-md"
+                className="w-30 h-20 rounded-md"
               />
               <div className="flex flex-col">
                 <span className="font-semibold">{pet.name}</span>
                 <span className="text-gray-600">
                   💰 {pet.price.toLocaleString()} 코인
                 </span>
+                <span className="text-sm text-gray-700 mt-1">
+                  {pet.description}
+                </span>
                 <button
-                  className={`mt-2 px-4 py-2 ${
+                  className={`w-[150px] mt-2 px-4 py-2 ${
                     money !== null && money >= pet.price
                       ? "bg-blue-500 hover:bg-blue-600"
                       : "bg-gray-400 cursor-not-allowed"
