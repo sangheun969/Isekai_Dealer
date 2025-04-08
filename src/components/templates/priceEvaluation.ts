@@ -1,25 +1,32 @@
 export function getMinAcceptablePrice(
   suggestedPrice: number,
-  personality: string
+  personality: string,
+  greedLevel: number
 ): number {
+  let basePrice: number;
   switch (personality) {
     case "호구":
-      return suggestedPrice / 4;
-    case "철저한 협상가":
-      return suggestedPrice / 2;
-    case "도둑놈 기질":
-      return suggestedPrice / 2.5;
-    case "부유한 바보":
-      return 0;
     case "초보 수집가":
-      return suggestedPrice / 4;
     case "화끈한 사람":
-      return suggestedPrice / 4;
+      basePrice = suggestedPrice / 4;
+      break;
+    case "철저한 협상가":
+      basePrice = suggestedPrice / 2;
+      break;
+    case "도둑놈 기질":
+      basePrice = suggestedPrice / 2.5;
+      break;
     case "수상한 밀수업자":
-      return suggestedPrice / 2;
+      basePrice = suggestedPrice / 2;
+      break;
+    case "부유한 바보":
+      basePrice = 0;
+      break;
     default:
-      return suggestedPrice;
+      basePrice = suggestedPrice;
   }
+  const greedMultiplier = 1 + (greedLevel - 1) * 0.1;
+  return Math.floor(basePrice * greedMultiplier);
 }
 
 export function getResponseText(
@@ -122,7 +129,8 @@ export function getResponseText(
 
 export function getMinPurchasePrice(
   clientOriginalPrice: number,
-  personality: string
+  personality: string,
+  greedLevel: number
 ): number {
   const randomMultiplier = Math.random() * 1.5 + 1.5;
 
@@ -166,6 +174,8 @@ export function getMinPurchasePrice(
     default:
       minPrice = clientOriginalPrice;
   }
+  const greedMultiplier = 1 + (greedLevel - 1) * 0.05;
+  minPrice *= greedMultiplier;
 
   return Math.min(minPrice, maxNegotiationPrice);
 }

@@ -99,6 +99,7 @@ export default class GameScene extends Phaser.Scene {
 
   private inventory: any[] = [];
 
+  private greedLevel: number;
   private list1: Phaser.GameObjects.Image | null = null;
 
   private personalities: string[] = [
@@ -145,6 +146,7 @@ export default class GameScene extends Phaser.Scene {
     this.buttonText5 = null;
     this.inventory = [];
     this.money = 0;
+    this.greedLevel = Phaser.Math.Between(1, 5);
   }
 
   async saveGameState() {
@@ -226,6 +228,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   preload() {
+    this.load.image("pawnShopBackground1", "/images/mapBg/shop1.png");
     this.load.image("pawnShopBackground3", "/images/background/storeBg5.png");
     this.load.image("table2", "/images/background/table2.png");
     this.load.image("stand2", "/images/background/stand2.png");
@@ -244,6 +247,9 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("amountPaid2", "/images/items/moneyCoin4.png");
     this.load.image("reinputPrice", "/images/background/reinputPrice.png");
     this.load.image("statsImg2", "/images/background/statsImg2.png");
+    this.load.image("coinIcon", "/images/icon/icon3.png");
+    this.load.image("itemStatusBg", "/images/background/status1.png");
+    this.load.image("closeIcon", "/images/icon/icon2.png");
 
     this.cameras.main.setBackgroundColor("#000000");
     for (let i = 1; i <= 16; i++) {
@@ -375,7 +381,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     this.background = this.add
-      .image(0, 0, "pawnShopBackground3")
+      .image(0, 0, "pawnShopBackground1")
       .setOrigin(0, 0)
       .setDisplaySize(width, height);
 
@@ -393,10 +399,10 @@ export default class GameScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
 
     this.saveText = this.add
-      .text(width - 10, 90, "💾 저장", {
+      .text(152, 80, "💾 저장", {
         fontSize: "32px",
         color: "#fff",
-        padding: { left: 10, right: 10, top: 5, bottom: 5 },
+        padding: { x: 10, y: 6 },
       })
       .setInteractive()
       .setDepth(10)
@@ -407,17 +413,23 @@ export default class GameScene extends Phaser.Scene {
         console.log("✅ 게임 저장 완료!");
       });
 
+    const coinIcon = this.add
+      .image(width - 350, 65, "coinIcon")
+      .setDisplaySize(52, 52)
+      .setDepth(10)
+      .setOrigin(0, 0.5);
+
     this.moneyText = this.add
-      .text(width - 10, 50, `💰 ${this.money.toLocaleString()} 코인`, {
-        fontSize: "32px",
+      .text(width - 300, 50, `${this.money.toLocaleString()}`, {
+        fontSize: "48px",
         color: "#fff",
         padding: { left: 10, right: 10, top: 5, bottom: 5 },
       })
-      .setDepth(10)
-      .setOrigin(1, 0);
+      .setOrigin(0, 0)
+      .setDepth(10);
 
     this.dailyClientText = this.add
-      .text(width - 140, 90, `${this.dailyClientCount}명/8`, {
+      .text(width - 450, 50, `${this.dailyClientCount}명/8`, {
         fontSize: "28px",
         color: "#fff",
         padding: { left: 10, right: 10, top: 5, bottom: 5 },
@@ -790,7 +802,7 @@ export default class GameScene extends Phaser.Scene {
     this.speechText = this.add
       .text(width / 5, height / 3 - 70, randomGreeting, {
         fontFamily: "Arial",
-        fontSize: "24px",
+        fontSize: "28px",
         color: "#ffffff",
         wordWrap: { width: this.speechBubble.displayWidth * 0.7 },
         align: "center",
@@ -856,7 +868,6 @@ export default class GameScene extends Phaser.Scene {
 
   private loadItem(itemData: any) {
     if (this.currentItem) {
-      console.log(`🗑️ 이전 아이템 (${this.currentItemKey}) 제거`);
       this.currentItem.destroy();
       this.currentItem = null;
       this.currentItemKey = null;
@@ -982,13 +993,10 @@ export default class GameScene extends Phaser.Scene {
           buttonImage4.destroy();
           buttonText4.destroy();
           const createInputField = (defaultValue = "") => {
-            const inputBg = this.add
-              .image(width / 2, height / 2, "reinputPrice")
-              .setScale(0.5)
-              .setDepth(10);
-
             const inputElement = document.createElement("input");
             inputElement.type = "text";
+            inputElement.style.background = "black";
+            inputElement.style.color = "white";
             inputElement.placeholder = "가격을 입력하세요...";
             inputElement.value = defaultValue;
             inputElement.style.position = "absolute";
@@ -999,8 +1007,8 @@ export default class GameScene extends Phaser.Scene {
             inputElement.style.fontSize = "24px";
             inputElement.style.padding = "5px";
             inputElement.style.border = "1px solid white";
-            inputElement.style.background = "transparent";
-            inputElement.style.color = "white";
+            // inputElement.style.background = "transparent";
+
             inputElement.style.textAlign = "center";
             inputElement.style.outline = "none";
 
@@ -1013,7 +1021,7 @@ export default class GameScene extends Phaser.Scene {
             confirmButton.innerText = "확인";
             confirmButton.style.position = "absolute";
             confirmButton.style.left = `${width / 2 + 80}px`;
-            confirmButton.style.top = `${height / 2 + 40}px`;
+            confirmButton.style.top = `${height / 2 - 40}px`;
             confirmButton.style.width = "60px";
             confirmButton.style.height = "36px";
             confirmButton.style.fontSize = "14px";
@@ -1036,7 +1044,6 @@ export default class GameScene extends Phaser.Scene {
 
               inputElement.remove();
               confirmButton.remove();
-              inputBg.setVisible(false);
 
               const reinputButton = this.add
                 .image(width / 4 + 230, height / 1.8 + 120, "reinputIcon")
@@ -1048,7 +1055,6 @@ export default class GameScene extends Phaser.Scene {
                 buttonImage5.destroy();
                 buttonText5.destroy();
                 reinputButton.setVisible(false);
-                inputBg.setVisible(false);
 
                 createInputField(String(price));
               });
@@ -1056,7 +1062,8 @@ export default class GameScene extends Phaser.Scene {
 
               let minAcceptablePrice = getMinAcceptablePrice(
                 this.suggestedPrice,
-                this.currentClientPersonality as string
+                this.currentClientPersonality as string,
+                this.greedLevel
               );
               const { buttonImage: buttonImage5, buttonText: buttonText5 } =
                 this.createImageButtonWithText(
@@ -1444,7 +1451,7 @@ export default class GameScene extends Phaser.Scene {
         height / 3 - 70,
         `이 물건을 사고 싶은데, ${purchasePrice.toLocaleString()} 코인 이정도면 괜찮은가?`,
         {
-          fontSize: "20px",
+          fontSize: "28px",
           color: "#fffafa",
           fontFamily: "Arial",
           align: "center",
@@ -1734,7 +1741,8 @@ export default class GameScene extends Phaser.Scene {
                     () => {
                       const minPurchasePrice = getMinPurchasePrice(
                         this.suggestedPrice,
-                        this.currentClientPersonality as string
+                        this.currentClientPersonality as string,
+                        this.greedLevel
                       );
 
                       const maxMultipliers: Record<string, number> = {

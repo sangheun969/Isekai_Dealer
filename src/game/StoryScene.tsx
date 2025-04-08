@@ -26,6 +26,7 @@ export default class StoryScene extends Phaser.Scene {
   preload() {
     this.load.image("pawnShopBackground2", "/images/background/storeBg1.png");
     this.load.image("pawnShopBackground3", "/images/background/storeBg5.png");
+    this.load.image("pawnShopBackground1", "/images/mapBg/shop1.png");
     this.load.image("master", "/images/main/master4.png");
     this.load.image("table1", "/images/background/table1.png");
     this.load.image("frontmen3", "/images/npc/frontmen4.png");
@@ -281,7 +282,7 @@ export default class StoryScene extends Phaser.Scene {
     }
     if (currentStory.effect === "흰화면") {
       this.addWhiteScreenEffect();
-      this.changeBackground("pawnShopBackground3");
+      this.changeBackground("pawnShopBackground1");
     } else if (currentStory.effect === null) {
       this.gameObject?.setAlpha(0);
     } else {
