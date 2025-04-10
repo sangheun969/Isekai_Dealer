@@ -35,18 +35,18 @@ export const saveGameProgress = (
   items: any[],
   customerData: any = {},
   petList: any[] = [],
-  day: number = 1
-) => {
-  return new Promise<void>((resolve, reject) => {
+  currentDay: number = 1
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
     db.run(
       `INSERT INTO game_progress (id, money, items, customer_data, pet_list, day) 
-      VALUES (?, ?, ?, ?, ?, ?) 
-     ON CONFLICT(id) DO UPDATE 
-     SET money = excluded.money, 
-         items = excluded.items,
-         customer_data = excluded.customer_data,
-         pet_list = excluded.pet_list,
-         day = excluded.day;`,
+       VALUES (?, ?, ?, ?, ?, ?) 
+       ON CONFLICT(id) DO UPDATE 
+       SET money = excluded.money, 
+           items = excluded.items,
+           customer_data = excluded.customer_data,
+           pet_list = excluded.pet_list,
+           day = excluded.day;`,
 
       [
         1,
@@ -54,14 +54,16 @@ export const saveGameProgress = (
         JSON.stringify(items),
         JSON.stringify(customerData),
         JSON.stringify(petList),
-        day,
+        currentDay,
       ],
       (err) => {
         if (err) {
           console.error("❌ 게임 데이터 저장 실패:", err.message);
           reject(err);
         } else {
-          console.log("✅ 게임 데이터 저장 성공!");
+          console.log(
+            `✅ 게임 데이터 저장 성공! (현재일자: ${currentDay}일차)`
+          );
           resolve();
         }
       }
@@ -74,7 +76,7 @@ export const loadGameProgress = (): Promise<{
   items: any[];
   customerData: any;
   petList: any[];
-  day: number;
+  currentDay: number;
 }> => {
   return new Promise((resolve, reject) => {
     db.get(
@@ -95,7 +97,7 @@ export const loadGameProgress = (): Promise<{
             items: [],
             customerData: {},
             petList: [],
-            day: 1,
+            currentDay: 1,
           });
           return;
         }
@@ -108,7 +110,7 @@ export const loadGameProgress = (): Promise<{
               ? JSON.parse(row.customer_data)
               : {},
             petList: row.pet_list ? JSON.parse(row.pet_list) : [],
-            day: row.day ?? 1,
+            currentDay: row.day ?? 1,
           });
         } catch (parseError) {
           console.error("❌ 데이터 파싱 실패:", parseError);

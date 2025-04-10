@@ -151,10 +151,16 @@ export default class GameScene extends Phaser.Scene {
 
   async saveGameState() {
     try {
-      await saveGameProgress(this.money, this.inventory, this.petList, {
-        personality: this.currentClientPersonality,
-        item: this.currentItemData,
-      });
+      await saveGameProgress(
+        this.money,
+        this.inventory,
+        this.petList,
+        {
+          personality: this.currentClientPersonality,
+          item: this.currentItemData,
+        },
+        this.currentDay
+      );
 
       if (this.moneyText) {
         this.moneyText.setText(`💰 ${this.money.toLocaleString()} 코인`);
@@ -242,7 +248,6 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("cat1", "/images/main/cat1.png");
     this.load.image("pet2_1", "/images/main/pet2_1.png");
     this.load.image("pet3_1", "/images/main/pet3_1.png");
-    this.load.image("reinputIcon", "/images/icon/icon1.png");
     this.load.image("amountPaid1", "/images/items/moneyCoin2.png");
     this.load.image("amountPaid2", "/images/items/moneyCoin4.png");
     this.load.image("reinputPrice", "/images/background/reinputPrice.png");
@@ -250,6 +255,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("coinIcon", "/images/icon/icon3.png");
     this.load.image("itemStatusBg", "/images/background/status1.png");
     this.load.image("closeIcon", "/images/icon/icon2.png");
+    this.load.image("quitBtn", "images/background/quitBtn.png");
 
     this.cameras.main.setBackgroundColor("#000000");
     for (let i = 1; i <= 16; i++) {
@@ -491,6 +497,27 @@ export default class GameScene extends Phaser.Scene {
         padding: { x: 10, y: 6 },
       })
       .setDepth(100);
+
+    const quitButton = this.add
+      .image(100, 150, "quitBtn")
+      .setInteractive({ useHandCursor: true })
+      .setScrollFactor(0)
+      .setScale(0.3);
+
+    quitButton.on("pointerover", () => {
+      quitButton.setScale(0.35);
+    });
+    quitButton.on("pointerout", () => {
+      quitButton.setScale(0.3);
+    });
+
+    quitButton.on("pointerdown", () => {
+      this.saveGameState();
+
+      this.time.delayedCall(300, () => {
+        this.scene.start("Scenes");
+      });
+    });
   }
 
   private updateDayText() {
@@ -992,6 +1019,7 @@ export default class GameScene extends Phaser.Scene {
         () => {
           buttonImage4.destroy();
           buttonText4.destroy();
+
           const createInputField = (defaultValue = "") => {
             const inputElement = document.createElement("input");
             inputElement.type = "text";
@@ -1044,20 +1072,24 @@ export default class GameScene extends Phaser.Scene {
 
               inputElement.remove();
               confirmButton.remove();
-
-              const reinputButton = this.add
-                .image(width / 4 + 230, height / 1.8 + 120, "reinputIcon")
-                .setScale(0.1)
-                .setDepth(8)
-                .setInteractive();
-
-              reinputButton.on("pointerdown", () => {
-                buttonImage5.destroy();
-                buttonText5.destroy();
-                reinputButton.setVisible(false);
-
-                createInputField(String(price));
-              });
+              const { buttonImage: reinputButton, buttonText: reinputText } =
+                this.createImageButtonWithText(
+                  width / 5,
+                  height / 1.5 + 10,
+                  "speechBubble8",
+                  "재입력",
+                  () => {
+                    reinputButton.destroy();
+                    reinputText.destroy();
+                    // buttonImage3.destroy();
+                    // buttonText3.destroy();
+                    buttonImage4.destroy();
+                    buttonText4.destroy();
+                    buttonImage5.destroy();
+                    buttonText5.destroy();
+                    createInputField(String(price));
+                  }
+                );
               let negotiationAttempts = 0;
 
               let minAcceptablePrice = getMinAcceptablePrice(
@@ -1543,7 +1575,6 @@ export default class GameScene extends Phaser.Scene {
 
       const soldItem = this.inventory[itemIndex];
       const salePrice = confirmedPrice ?? Math.floor(soldItem.price * 1.2);
-      console.log("✅ 최종 판매 가격:", salePrice);
 
       this.todaySalesAmount += salePrice;
       this.todaySalesCount++;
@@ -1606,6 +1637,11 @@ export default class GameScene extends Phaser.Scene {
               const message =
                 exitMessages[Math.floor(Math.random() * exitMessages.length)];
               this.speechText.setText(message);
+            }
+
+            if (this.moneyImage) {
+              this.moneyImage.destroy();
+              this.moneyImage = null;
             }
 
             this.time.delayedCall(1500, () => {
@@ -1714,10 +1750,8 @@ export default class GameScene extends Phaser.Scene {
                 }
 
                 setTimeout(() => {
-                  console.log("⏳ 2초 후 메시지 제거 체크");
                   if (document.body.contains(warningMessage)) {
                     warningMessage.style.display = "none";
-                    console.log("✅ warningMessage 숨김");
                   }
                 }, 2000);
               } else {
@@ -1770,6 +1804,8 @@ export default class GameScene extends Phaser.Scene {
                         this.currentClientPersonality as string,
                         this.lastClientPrice,
                         this.suggestedPrice,
+                        this.greedLevel,
+                        purchasePrice,
 
                         maxNegotiationPrice
                       );

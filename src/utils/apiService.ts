@@ -1,16 +1,16 @@
 const API_URL = "http://localhost:3001/api";
-
 export const saveGameProgress = async (
   money: number,
   items: any[],
   petList: any[],
-  customerData?: any
+  customerData: any = {},
+  currentDay: number = 1
 ) => {
   try {
     const response = await fetch(`${API_URL}/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ money, items, customerData, petList }),
+      body: JSON.stringify({ money, items, customerData, petList, currentDay }),
     });
 
     if (!response.ok) {

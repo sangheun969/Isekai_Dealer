@@ -23,6 +23,27 @@ export default class StoryScene extends Phaser.Scene {
     super({ key: "StoryScene" });
   }
 
+  init(data: { reset?: boolean }) {
+    if (data?.reset) {
+      this.storyTextIndex = 0;
+      this.currentCharacterImage?.destroy();
+      this.currentCharacterImage = null;
+      this.dialogueTextBelow?.destroy();
+      this.dialogueTextBelow = null;
+      this.dialogueBox?.destroy();
+      this.dialogueBox = null;
+      this.characterNameText?.destroy();
+      this.characterNameText = null;
+      this.gauntletItemImage?.destroy();
+      this.gauntletItemImage = null;
+      this.gameObject?.destroy();
+      this.gameObject = null;
+      this.background?.destroy();
+      this.background = null;
+      this.typingTimer?.remove(false);
+    }
+  }
+
   preload() {
     this.load.image("pawnShopBackground2", "/images/background/storeBg1.png");
     this.load.image("pawnShopBackground3", "/images/background/storeBg5.png");
@@ -107,12 +128,6 @@ export default class StoryScene extends Phaser.Scene {
         this.speechBubble.height * 0.4
       );
     }
-
-    // this.speechBubble2 = this.add
-    //   .image(width / 2, height / 4.5, "speechBubble6")
-    //   .setScale(0.2)
-    //   .setDepth(3)
-    //   .setAlpha(0);
 
     this.gameObject = this.add
       .image(width, height, "exampleImage")

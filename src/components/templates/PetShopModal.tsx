@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getGameInstance } from "../organisms/gameInstance";
-
+import SuccessModal from "../organisms/SuccessModal";
 interface Pet {
   id: number;
   name: string;
@@ -18,6 +18,8 @@ interface PetShopModalProps {
 const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
   const [money, setMoney] = useState<number | null>(null);
   const [petList, setPetList] = useState<Pet[]>([]);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const petStoreList: Pet[] = [
     {
@@ -91,17 +93,17 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
         customerData: gameData.customerData,
         petList: updatedPetList,
       });
-      console.log("💾 저장되는 petList:", updatedPetList);
+
       gameScene.addPet(pet);
       setMoney(updatedMoney);
       setPetList(updatedPetList);
       gameScene.events.emit("updatePlayerMoney", updatedMoney);
       gameScene.setSelectedPet(pet);
-
       window.dispatchEvent(new Event("petListUpdated"));
 
       if (onPurchase) onPurchase(pet);
-      alert(`✅ ${pet.name}을(를) 구매했습니다!`);
+      setSuccessMessage(`✅ ${pet.name}을(를) 구매했습니다!`);
+      setShowSuccessModal(true);
     } catch (err) {
       console.error("❌ 펫 구매 처리 중 오류:", err);
       alert("데이터 저장에 실패했습니다.");
@@ -147,6 +149,12 @@ const PetShopModal: React.FC<PetShopModalProps> = ({ onClose, onPurchase }) => {
                 >
                   구매하기
                 </button>
+                {showSuccessModal && (
+                  <SuccessModal
+                    message={successMessage}
+                    onClose={() => setShowSuccessModal(false)}
+                  />
+                )}
               </div>
             </div>
           ))}
