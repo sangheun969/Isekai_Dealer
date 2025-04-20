@@ -18,6 +18,7 @@ declare global {
         petList: any[];
       }>;
       greenworks: any;
+      exitApp: () => void;
     };
   }
 }

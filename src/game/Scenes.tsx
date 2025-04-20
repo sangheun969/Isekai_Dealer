@@ -11,6 +11,7 @@ export default class Scenes extends Phaser.Scene {
   private startButton?: Phaser.GameObjects.Image;
   private loadButton?: Phaser.GameObjects.Image;
   private settingsButton?: Phaser.GameObjects.Image;
+  private exitButton?: Phaser.GameObjects.Image;
 
   constructor() {
     super({ key: "Scenes" });
@@ -43,7 +44,7 @@ export default class Scenes extends Phaser.Scene {
       .setDepth(-1);
 
     this.startButton = this.add
-      .image(centerX, startY, "playBtn2")
+      .image(centerX, startY, "playBtn5")
       .setInteractive({ useHandCursor: true })
       .setOrigin(0.5)
       .setScale(0.4 * buttonScale);
@@ -55,8 +56,6 @@ export default class Scenes extends Phaser.Scene {
       this.startButton!.setScale(0.4 * buttonScale)
     );
     this.startButton.on("pointerdown", async () => {
-      console.log("🆕 새 게임 시작!");
-
       const newGameData = {
         money: 100000,
         items: [],
@@ -78,7 +77,7 @@ export default class Scenes extends Phaser.Scene {
     });
 
     this.loadButton = this.add
-      .image(centerX, startY + buttonGap, "playBtn3")
+      .image(centerX, startY + buttonGap, "playBtn6")
       .setInteractive({ useHandCursor: true })
       .setOrigin(0.5)
       .setScale(0.4 * buttonScale);
@@ -90,20 +89,17 @@ export default class Scenes extends Phaser.Scene {
       this.loadButton!.setScale(0.4 * buttonScale)
     );
     this.loadButton.on("pointerdown", async () => {
-      console.log("📥 저장된 데이터 불러오는 중...");
       const data = await loadGameProgress();
 
       if (data) {
-        console.log("✅ 불러오기 성공:", data);
         this.scene.start("GameScene", { savedData: data });
       } else {
         console.warn("⚠️ 저장된 데이터가 없습니다!");
       }
     });
 
-    // ⚙ 설정 버튼
     this.settingsButton = this.add
-      .image(centerX, startY + buttonGap * 2, "playBtn4")
+      .image(centerX, startY + buttonGap * 2, "playBtn7")
       .setInteractive({ useHandCursor: true })
       .setOrigin(0.5)
       .setScale(0.4 * buttonScale);
@@ -134,6 +130,23 @@ export default class Scenes extends Phaser.Scene {
 
       effectSound.play();
       if (!this.settingsOpen) this.showSettingsModal();
+    });
+    this.exitButton = this.add
+      .image(centerX, startY + buttonGap * 3, "playBtn8")
+      .setInteractive({ useHandCursor: true })
+      .setOrigin(0.5)
+      .setScale(0.4 * buttonScale);
+
+    this.exitButton.on("pointerover", () => {
+      this.exitButton!.setScale(0.45 * buttonScale);
+    });
+
+    this.exitButton.on("pointerout", () =>
+      this.exitButton!.setScale(0.4 * buttonScale)
+    );
+    this.exitButton.on("pointerdown", () => {
+      console.log("🔚 게임 종료 요청");
+      window.api.exitApp();
     });
   }
 

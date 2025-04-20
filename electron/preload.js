@@ -18,4 +18,5 @@ contextBridge.exposeInMainWorld("api", {
   loadGameFromDB: () => ipcRenderer.invoke("load-game-from-db"),
 
   greenworks: greenworks,
+  exitApp: () => ipcRenderer.send("exit-app"),
 });

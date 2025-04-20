@@ -115,3 +115,8 @@ ipcMain.handle("load-game-from-db", async () => {
     return null;
   }
 });
+
+ipcMain.on("exit-app", () => {
+  console.log("🛑 종료 요청 수신됨. 앱 종료 중...");
+  app.quit();
+});

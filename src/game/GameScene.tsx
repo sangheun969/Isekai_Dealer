@@ -1017,8 +1017,8 @@ export default class GameScene extends Phaser.Scene {
         "speechBubble8",
         "음..이 가격은 어떨까요?",
         () => {
-          buttonImage4.destroy();
-          buttonText4.destroy();
+          buttonImage4.setVisible(false);
+          buttonText4.setVisible(false);
 
           const createInputField = (defaultValue = "") => {
             const inputElement = document.createElement("input");
@@ -1035,7 +1035,6 @@ export default class GameScene extends Phaser.Scene {
             inputElement.style.fontSize = "24px";
             inputElement.style.padding = "5px";
             inputElement.style.border = "1px solid white";
-            // inputElement.style.background = "transparent";
 
             inputElement.style.textAlign = "center";
             inputElement.style.outline = "none";
@@ -1048,8 +1047,8 @@ export default class GameScene extends Phaser.Scene {
             const confirmButton = document.createElement("button");
             confirmButton.innerText = "확인";
             confirmButton.style.position = "absolute";
-            confirmButton.style.left = `${width / 2 + 80}px`;
-            confirmButton.style.top = `${height / 2 - 40}px`;
+            confirmButton.style.left = `${width / 2 - 60}px`;
+            confirmButton.style.top = `${height / 2 - 100}px`;
             confirmButton.style.width = "60px";
             confirmButton.style.height = "36px";
             confirmButton.style.fontSize = "14px";
@@ -1059,8 +1058,32 @@ export default class GameScene extends Phaser.Scene {
             confirmButton.style.color = "white";
             confirmButton.style.cursor = "pointer";
 
+            const cancelButton = document.createElement("button");
+            cancelButton.innerText = "취소";
+            cancelButton.style.position = "absolute";
+            cancelButton.style.left = `${width / 2 - 150}px`; // 왼쪽
+            cancelButton.style.top = `${height / 2 - 100}px`;
+            cancelButton.style.width = "60px";
+            cancelButton.style.height = "36px";
+            cancelButton.style.fontSize = "14px";
+            cancelButton.style.padding = "5px";
+            cancelButton.style.border = "1px solid white";
+            cancelButton.style.background = "gray";
+            cancelButton.style.color = "white";
+            cancelButton.style.cursor = "pointer";
+
+            cancelButton.addEventListener("click", () => {
+              inputElement.remove();
+              confirmButton.remove();
+              cancelButton.remove();
+
+              buttonImage4.setVisible(true);
+              buttonText4.setVisible(true);
+            });
+
             document.body.appendChild(inputElement);
             document.body.appendChild(confirmButton);
+            document.body.appendChild(cancelButton);
             inputElement.focus();
 
             const handleInput = () => {
@@ -1072,6 +1095,7 @@ export default class GameScene extends Phaser.Scene {
 
               inputElement.remove();
               confirmButton.remove();
+              cancelButton.remove();
               const { buttonImage: reinputButton, buttonText: reinputText } =
                 this.createImageButtonWithText(
                   width / 5,
@@ -1140,6 +1164,9 @@ export default class GameScene extends Phaser.Scene {
                       buttonText5.destroy();
                       if (reinputButton) {
                         reinputButton.setVisible(false);
+                      }
+                      if (reinputText) {
+                        reinputText.setVisible(false);
                       }
 
                       const { buttonImage: yesButton, buttonText: yesText } =
